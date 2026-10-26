@@ -1,12 +1,12 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/readme-banner-dark.png">
-    <img src="docs/brand/readme-banner-light.png" alt="Tenwise Engine: local-first reading with on-device AI" width="720">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/tenwise-wordmark-dark.svg">
+    <img src="docs/brand/tenwise-wordmark-light.svg" alt="Tenwise" width="480">
   </picture>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Tenwise/tenwise-engine/tags"><img src="https://img.shields.io/badge/version-0.1.1-f59e0b" alt="Version 0.1.1"></a>
+  <a href="https://github.com/Tenwise/tenwise-engine/tags"><img src="https://img.shields.io/badge/version-0.1.2-f59e0b" alt="Version 0.1.2"></a>
   <a href="#license"><img src="https://img.shields.io/badge/license-AGPL--3.0--only-14213d" alt="License: AGPL-3.0-only"></a>
   <img src="https://img.shields.io/badge/AI-on--device%20%C2%B7%20Gemini%20Nano%20%7C%20Ollama-14213d" alt="On-device AI: Gemini Nano or Ollama">
   <img src="https://img.shields.io/badge/node-22.13%2B%20%7C%2024%2B-14213d" alt="Node 22.13+ or 24+">
