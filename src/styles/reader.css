@@ -1,0 +1,300 @@
+/* The reader is the third pane, docked beside the list (the list stays
+   usable). Below 1100px there isn't room for three panes, so it slides over
+   the list instead, with a backdrop. Focus mode (.zen) covers the window.
+   Inside the panel: the article column (.reader-main) and the AI rail. */
+.reader-overlay-backdrop {
+  display: none;
+}
+
+.article-reader-panel {
+  container: reader-panel / inline-size;
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+  height: 100vh;
+  max-width: 60vw;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+/* With the rail open the panel grows into the list, which keeps its 320px
+   minimum; the panel shrinks rather than push the list below it. */
+.article-reader-panel.has-rail {
+  max-width: none;
+}
+
+.article-reader-panel:has(.reader-main) {
+  flex-direction: row;
+}
+
+.reader-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The AI rail (ai-drawer/AIRail.jsx): positioned here, not with a utility,
+   so the narrow-panel rule below can turn it into an overlay. */
+.ai-drawer {
+  position: relative;
+}
+
+/* Too narrow for the article and the rail side by side: the rail slides
+   over the article instead of squeezing it. */
+@container reader-panel (max-width: 760px) {
+  .article-reader-panel .ai-drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    max-width: 100%;
+    box-shadow: -12px 0 32px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ] hides the list: the reader (and rail) take the whole width. */
+@media (min-width: 1100px) {
+  .list-hidden .article-list-panel {
+    display: none;
+  }
+
+  .list-hidden .article-reader-panel {
+    flex: 1 1 auto;
+    width: auto !important;
+    max-width: none;
+  }
+}
+
+@media (max-width: 1099px) {
+  .reader-overlay-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: var(--bg-modal-overlay);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .reader-overlay-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .article-reader-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 100vw;
+    z-index: 110;
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.35);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* The overlay never exceeds the screen, rail or not. */
+  .article-reader-panel.has-rail {
+    max-width: 100vw;
+  }
+
+  /* With nothing open, the overlay reader has nothing to show. */
+  aside.article-reader-panel {
+    display: none;
+  }
+}
+
+.article-reader-panel.visible {
+  transform: none;
+}
+
+/* A narrow reader drops the button labels so every control stays visible;
+   each control keeps its tooltip. */
+
+.reader-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 48px 48px 96px;
+  max-width: calc(var(--reader-max-width, 700px) + 96px);
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* The saved AI summary, ruled off between the headline and the body. */
+
+.reader-article-content {
+  font-family: var(--reader-font-family);
+  font-size: var(--reader-font-size, 16px);
+  line-height: var(--reader-line-height, 1.8);
+  color: var(--text-primary);
+}
+
+.reader-article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  margin: 20px 0;
+}
+
+.reader-article-content h1,
+.reader-article-content h2,
+.reader-article-content h3,
+.reader-article-content h4 {
+  margin: 24px 0 12px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.reader-article-content h1 { font-size: 26px; }
+.reader-article-content h2 { font-size: 22px; }
+.reader-article-content h3 { font-size: 18px; }
+.reader-article-content h4 { font-size: 16px; }
+
+.reader-article-content p {
+  margin-bottom: 16px;
+}
+
+.reader-article-content a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.reader-article-content blockquote {
+  border-left: 2px solid var(--accent);
+  padding: 2px 0 2px 22px;
+  margin: 28px 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.reader-article-content pre {
+  background: var(--bg-tertiary);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  margin: 16px 0;
+  font-size: 13px;
+}
+
+.reader-article-content code {
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.reader-article-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.reader-article-content ul,
+.reader-article-content ol {
+  padding-left: 24px;
+  margin-bottom: 16px;
+}
+
+.reader-article-content ul { list-style: disc; }
+.reader-article-content ol { list-style: decimal; }
+.reader-article-content li > ul { list-style: circle; }
+
+.reader-article-content h5,
+.reader-article-content h6 {
+  margin: 20px 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.reader-article-content hr {
+  margin: 32px 0;
+  border-top: 1px solid var(--border);
+}
+
+.reader-article-content table {
+  width: 100%;
+  margin: 20px 0;
+  font-size: 0.9em;
+}
+
+.reader-article-content th,
+.reader-article-content td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.reader-article-content video,
+.reader-article-content iframe {
+  max-width: 100%;
+}
+
+.reader-article-content li {
+  margin-bottom: 8px;
+}
+
+.reader-article-content figure {
+  margin: 20px 0;
+}
+
+.reader-article-content figcaption {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* ── Reading progress bar ─────────────────────────────────── */
+.reading-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--accent);
+  transition: width 150ms ease;
+  z-index: 10;
+  border-radius: 0 2px 2px 0;
+  pointer-events: none;
+}
+
+/* ── Zen / focus mode ─────────────────────────────────────── */
+.article-reader-panel.zen {
+  position: fixed;
+  inset: 0;
+  width: 100vw !important;
+  max-width: none;
+  z-index: 110;
+  border-left: none;
+  transform: none;
+}
+
+.reader-overlay-backdrop.zen {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg-primary);
+  opacity: 1;
+}
+
+/* marks in article content */
+mark[data-highlight-id] {
+  border-radius: 2px;
+  padding: 0 1px;
+  cursor: default;
+}
+mark[data-highlight-id]:hover { filter: brightness(0.92); }
+
+/* Phones: a tighter article column. */
+@media (max-width: 768px) {
+  .reader-content {
+    padding: 20px 16px 48px;
+  }
+}

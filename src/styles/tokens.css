@@ -1,0 +1,143 @@
+/* ===== Design Tokens: "Instrument" ===== */
+:root {
+  /* Dark theme (default): graphite surfaces, warm off-white text. */
+  --bg-primary: #121315;
+  --bg-secondary: #18191c;
+  --bg-tertiary: #1e2023;
+  --bg-hover: #24262a;
+  --bg-active: #2a2c30;
+  --bg-surface: #1b1c1f;
+  --bg-modal: #1a1b1e;
+  --bg-modal-overlay: rgba(0, 0, 0, 0.6);
+
+  /* Every pane's top bar (sidebar, list, reader, AI rail, library, panels)
+     has this height, so their bottom borders line up across the window. */
+  --pane-header-height: 48px;
+
+  /* The app rail (far left) stays dark in both themes. */
+  --rail-bg: #0d0e10;
+  --rail-border: #202226;
+  --rail-icon: #8e8b85;
+  --rail-icon-hover: #e8e6e1;
+  --rail-active: #24262a;
+
+  /* Text tokens stay at 4.5:1 or more (WCAG AA) on every surface, --bg-active
+     included (tokens.test.js checks); --text-muted is for disabled text and
+     decoration only. */
+  --text-primary: #e8e6e1;
+  --text-secondary: #b4b1aa;
+  --text-tertiary: #96938d;
+  --text-muted: #6a6863;
+
+  /* Toolbars and action rows that stay quiet until hovered or focused rest
+     at this opacity. Their text still reaches 4.5:1 on the page and panel
+     surfaces at this value (tokens.test.js checks); 0.85 did not. */
+  --dimmed-opacity: 0.9;
+
+  /* One accent color; its hover, muted and border shades derive from it, so
+     a preset or custom accent only sets --accent. */
+  --accent: #f59e0b;
+  --accent-hover: color-mix(in oklch, var(--accent), white 18%);
+  --accent-muted: color-mix(in srgb, var(--accent) 15%, transparent);
+  --accent-border: color-mix(in srgb, var(--accent) 30%, transparent);
+  /* Text and icons drawn on an accent-colored background. */
+  --accent-foreground: #121315;
+  /* The logo's lettering color (docs/brand): near-white here, navy in light. */
+  --brand-ink: #f8fafc;
+
+  --danger: #ec6a62;
+  --danger-muted: rgba(236, 106, 98, 0.15);
+  /* Text on a danger-colored background (destructive buttons). */
+  --danger-foreground: #121315;
+  --warning: #f0b455;
+  --info: #6ca6d9;
+
+  --border: #26282c;
+  --border-light: #2e3035;
+  --border-focus: var(--accent);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px color-mix(in srgb, var(--accent) 10%, transparent);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --sidebar-width: 260px;
+  --article-list-width: 380px;
+
+  --reader-font-family: 'Newsreader Variable', Georgia, serif;
+  --reader-font-size: 16px;
+  --reader-line-height: 1.8;
+  --reader-max-width: 780px;
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Typography: AppearanceContext sets --font-family from src/app/fonts.js */
+:root {
+  --font-family: 'IBM Plex Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono Variable', 'Courier New', monospace;
+}
+
+/* Accent presets (Settings → Appearance). Amber is the default: the Tenwise
+   logo's amber in dark, and a deeper shade of it in light. Each keeps
+   accent-colored text at 4.5:1 on every surface of its theme (tokens.test.js). */
+:root[data-theme="dark"][data-color="amber"] { --accent: #f59e0b; }
+:root[data-theme="dark"][data-color="emerald"] { --accent: #2bc4a0; }
+:root[data-theme="dark"][data-color="blue"] { --accent: #5b9cf2; }
+:root[data-theme="dark"][data-color="purple"] { --accent: #a88bf5; }
+:root[data-theme="dark"][data-color="orange"] { --accent: #f08a4b; }
+:root[data-theme="dark"][data-color="rose"] { --accent: #ef6b82; }
+:root[data-theme="light"][data-color="amber"] { --accent: #9c4808; }
+:root[data-theme="light"][data-color="emerald"] { --accent: #096c56; }
+:root[data-theme="light"][data-color="blue"] { --accent: #1c57cf; }
+:root[data-theme="light"][data-color="purple"] { --accent: #6f41cc; }
+:root[data-theme="light"][data-color="orange"] { --accent: #a1430c; }
+:root[data-theme="light"][data-color="rose"] { --accent: #b12a45; }
+
+/* Text color variants */
+[data-theme="dark"][data-text="warm"] { --text-primary: #f0ead6; }
+[data-theme="dark"][data-text="pure"] { --text-primary: #ffffff; }
+[data-theme="dark"][data-text="soft"] { --text-primary: #c9c6bf; }
+/* Light theme versions; they must outrank the [data-theme="light"] block below. */
+[data-theme="light"][data-text="warm"] { --text-primary: #2e2618; }
+[data-theme="light"][data-text="pure"] { --text-primary: #000000; }
+[data-theme="light"][data-text="soft"] { --text-primary: #4d4a44; }
+
+/* Light theme */
+[data-theme="light"] {
+  --brand-ink: #14213d;
+  --bg-primary: #f6f5f2;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #eeede9;
+  --bg-hover: #e7e5e0;
+  --bg-active: #dedcd6;
+  --bg-surface: #ffffff;
+  --bg-modal: #ffffff;
+  --bg-modal-overlay: rgba(0, 0, 0, 0.3);
+
+  --text-primary: #1c1b19;
+  --text-secondary: #55524c;
+  --text-tertiary: #63605a;
+  --text-muted: #a8a59e;
+
+  --accent: #875613;
+  --accent-foreground: #ffffff;
+
+  --danger: #b2302a;
+  --danger-muted: rgba(178, 48, 42, 0.12);
+  --danger-foreground: #ffffff;
+
+  --border: #e2e0db;
+  --border-light: #ecebe7;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+}

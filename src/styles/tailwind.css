@@ -1,0 +1,51 @@
+/* The app's stylesheet entry: Tailwind v4 (theme, preflight, utilities),
+ * the shadcn/ui theme mapping, and the app stylesheets in src/styles/
+ * (tokens, fonts, page frame, reader), which sit in the components layer:
+ * above the preflight reset, below utilities.
+ *
+ * Every screen is built with Tailwind classes; Tailwind scans the project
+ * for them automatically, and packages/ for plugin screens (src/plugins),
+ * which live outside it. A checkout without packages/ builds the same.
+ */
+@import "tailwindcss";
+@source "../../../packages";
+@import "../index.css" layer(components);
+@import "tw-animate-css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* shadcn/ui's semantic colors, pointing at the app's existing tokens
+ * (src/styles/tokens.css). `inline` makes utilities use these expressions
+ * directly, so no :root variables are defined here: shadcn's names --accent
+ * and --border would otherwise collide with ours, which mean something else
+ * (our --accent is the brand color; shadcn's is a subtle hover background). */
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--bg-secondary);
+  --color-card-foreground: var(--text-primary);
+  --color-popover: var(--bg-modal);
+  --color-popover-foreground: var(--text-primary);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-foreground);
+  --color-secondary: var(--bg-tertiary);
+  --color-secondary-foreground: var(--text-primary);
+  --color-muted: var(--bg-tertiary);
+  --color-muted-foreground: var(--text-secondary);
+  --color-accent: var(--bg-hover);
+  --color-accent-foreground: var(--text-primary);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--danger-foreground);
+  --color-border: var(--border);
+  --color-input: var(--border-light);
+  --color-ring: var(--accent);
+  --font-sans: var(--font-family);
+}
+
+/* Borders take the theme's border color unless a utility says otherwise
+   (Tailwind's own default is the current text color). */
+@layer base {
+  *, ::before, ::after, ::backdrop, ::file-selector-button {
+    border-color: var(--color-border);
+  }
+}

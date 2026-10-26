@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tenwise</title>
+    <meta name="description" content="Tenwise: fast scanning, calm reading, and cited AI summaries of the sources that matter to you." />
+    <meta name="theme-color" content="#121315" />
+    <script>
+      // Apply the saved appearance before first paint so a light theme or a
+      // custom color does not flash the defaults. AppearanceContext takes over
+      // once React mounts; keep the keys and defaults in sync with it.
+      try {
+        // Keys saved before the project was named Tenwise move to their
+        // current names, once (the rule in shared/storageKeys.js).
+        var old = [];
+        for (var i = 0; i < localStorage.length; i++) {
+          if ((localStorage.key(i) || '').indexOf('atlas-pulse-') === 0) old.push(localStorage.key(i));
+        }
+        old.forEach(function (key) {
+          var renamed = 'tenwise-' + key.slice('atlas-pulse-'.length);
+          if (localStorage.getItem(renamed) === null) localStorage.setItem(renamed, localStorage.getItem(key));
+          localStorage.removeItem(key);
+        });
+        var get = function (key, fallback) { return localStorage.getItem(key) || fallback; };
+        var root = document.documentElement;
+        root.setAttribute('data-theme', get('tenwise-theme', get('feedflow-theme', 'dark')));
+        var fontStack = localStorage.getItem('tenwise-font-stack');
+        if (fontStack) root.style.setProperty('--font-family', fontStack);
+        root.setAttribute('data-color', get('tenwise-color', 'amber'));
+        root.setAttribute('data-text', get('tenwise-text', 'default'));
+        if (root.getAttribute('data-color') === 'custom') root.style.setProperty('--accent', get('tenwise-custom-color', '#e8a33d'));
+        if (root.getAttribute('data-text') === 'custom') root.style.setProperty('--text-primary', get('tenwise-custom-text', '#e8e6e1'));
+      } catch (e) { /* storage blocked: React applies the defaults */ }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

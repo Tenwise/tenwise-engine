@@ -1,0 +1,76 @@
+/* ===== Page frame =====
+   Tailwind's preflight is the reset; this sets the page itself, links in
+   app text, scrollbars, the three-pane frame, and the phone layout. */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* Scrollbars: thin, and only visible while the pointer is over the area. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover {
+  scrollbar-color: var(--border-light) transparent;
+}
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: transparent; border-radius: 2px; }
+*:hover::-webkit-scrollbar-thumb { background: var(--border-light); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Phones: the sidebar floats over the list, the list fills the screen, and
+   an open article covers it. */
+@media (max-width: 768px) {
+  .sidebar-panel {
+    position: fixed;
+    inset: 0 auto 0 52px;
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .article-list-panel {
+    min-width: 100%;
+  }
+
+  .article-reader-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: none;
+    width: 100vw !important;
+  }
+
+  .article-reader-panel.visible {
+    display: flex;
+  }
+}

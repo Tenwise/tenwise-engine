@@ -1,0 +1,13 @@
+/* ===== Article List =====
+   The panel frame only: everything inside it is Tailwind (article-list/,
+   shell/ArticleRow.jsx). It stays here because the list-hidden rule in
+   reader.css must be able to hide it. */
+.article-list-panel {
+  flex: 1;
+  min-width: 320px;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
