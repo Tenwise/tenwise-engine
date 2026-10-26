@@ -1,10 +1,34 @@
-# Tenwise Engine
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/readme-banner-dark.png">
+    <img src="docs/brand/readme-banner-light.png" alt="Tenwise Engine: local-first reading with on-device AI" width="720">
+  </picture>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Tenwise/tenwise-engine/tags"><img src="https://img.shields.io/badge/version-0.1.1-f59e0b" alt="Version 0.1.1"></a>
+  <a href="#license"><img src="https://img.shields.io/badge/license-AGPL--3.0--only-14213d" alt="License: AGPL-3.0-only"></a>
+  <img src="https://img.shields.io/badge/AI-on--device%20%C2%B7%20Gemini%20Nano%20%7C%20Ollama-14213d" alt="On-device AI: Gemini Nano or Ollama">
+  <img src="https://img.shields.io/badge/node-22.13%2B%20%7C%2024%2B-14213d" alt="Node 22.13+ or 24+">
+  <a href="https://github.com/Tenwise/tenwise-engine/actions/workflows/ci.yml"><img src="https://github.com/Tenwise/tenwise-engine/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://tenwise.app/docs/"><img src="https://img.shields.io/badge/docs-tenwise.app%2Fdocs-f59e0b" alt="User guide"></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="https://tenwise.app/docs/">User guide</a> ·
+  <a href="#the-engine-and-the-tenwise-app">Engine or app?</a> ·
+  <a href="https://tenwise.app">tenwise.app</a> ·
+  <a href="#license">License</a>
+</p>
 
 The Tenwise Engine is a local-first RSS reader for people who read a lot and want to keep what matters. Scan hundreds of articles in dense rows, read in a calm docked reader, save the good ones with a note on why, and file them into collections with ready-made citations.
 
 It runs entirely on your own machine. There is no account, no cloud and no tracking: your feeds, saves and notes live in one local SQLite file. AI summaries and chat run **on-device**, using **Gemini Nano** (built into desktop Google Chrome, no setup) or an optional local **Ollama** model.
 
-The engine is the open-source core of Tenwise, by CodeStrata, Inc., licensed under the [GNU AGPL v3](#license).
+The engine is the open-source core of [Tenwise](https://tenwise.app), by CodeStrata, Inc., licensed under the [GNU AGPL v3](#license).
+
+![Saved articles with their notes, and the reader showing a note, its collection and an APA citation](docs/screenshots/01-saved-reader-dark.png)
 
 ## Why the engine
 
@@ -13,6 +37,21 @@ The engine is the open-source core of Tenwise, by CodeStrata, Inc., licensed und
 - **Ready to cite.** Every save carries an APA 7 citation, and a collection downloads as one Markdown file of sources.
 - **AI that stays home.** Summaries and article chat run on Gemini Nano in your browser or on Ollama on your machine. Article text never goes to a hosted AI service.
 - **Yours, on disk.** One SQLite database and one settings file. Copy the folder to back it up.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/02-rows-reader-dark.png" alt="A folder in rows, with an article open in the docked reader"><p align="center"><em>Dense rows and the docked reader</em></p></td>
+    <td width="50%"><img src="docs/screenshots/03-collection-dark.png" alt="A collection with Download Markdown and Copy citations"><p align="center"><em>A collection, ready to cite or download</em></p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/05-palette-dark.png" alt="The command palette searching for AI"><p align="center"><em>⌘K: jump anywhere, run any command</em></p></td>
+    <td width="50%"><img src="docs/screenshots/08-add-feed-dark.png" alt="Add feeds, on the Popular tab, with sources by topic"><p align="center"><em>Add feeds by URL, search or topic</em></p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/07-saved-reader-light.png" alt="Saved articles and the reader in the light theme"><p align="center"><em>Light theme</em></p></td>
+    <td width="50%"><img src="docs/screenshots/10-settings-light.png" alt="Settings, Appearance: theme, fonts, accent and text color"><p align="center"><em>Fonts, accent and text color, your way</em></p></td>
+  </tr>
+</table>
 
 ## The engine and the Tenwise app
 

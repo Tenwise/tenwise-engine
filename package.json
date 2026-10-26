@@ -1,7 +1,7 @@
 {
   "name": "@tenwise/engine",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Tenwise Engine: a local-first feed reader with cited AI summaries that run on your own machine. No account, no cloud.",
   "license": "AGPL-3.0-only",
   "author": "CodeStrata, Inc.",
