@@ -82,22 +82,22 @@ test('localOnly answers 403, without the data, to another site\'s Host or Origin
 });
 
 test('publicOrigin accepts only a bare http(s) origin', () => {
-  assert.equal(publicOrigin('https://app.tenwise.app'), 'https://app.tenwise.app');
-  assert.equal(publicOrigin('https://app.tenwise.app/'), 'https://app.tenwise.app');
-  for (const bad of [undefined, '', 'app.tenwise.app', 'https://app.tenwise.app/app', 'https://u:p@app.tenwise.app', 'ftp://x.example']) {
+  assert.equal(publicOrigin('https://tenwise.app'), 'https://tenwise.app');
+  assert.equal(publicOrigin('https://tenwise.app/'), 'https://tenwise.app');
+  for (const bad of [undefined, '', 'tenwise.app', 'https://tenwise.app/app', 'https://u:p@tenwise.app', 'ftp://x.example']) {
     assert.equal(publicOrigin(bad), null, String(bad));
   }
 });
 
 test('the public origin is allowed only when configured, and only exactly', () => {
-  const pub = 'https://app.tenwise.app';
-  assert.equal(hostAllowedFor('app.tenwise.app', '127.0.0.1', pub), true);
-  assert.equal(hostAllowedFor('app.tenwise.app', '127.0.0.1', null), false);
+  const pub = 'https://tenwise.app';
+  assert.equal(hostAllowedFor('tenwise.app', '127.0.0.1', pub), true);
+  assert.equal(hostAllowedFor('tenwise.app', '127.0.0.1', null), false);
   assert.equal(hostAllowedFor('evil.codestrata.ai', '127.0.0.1', pub), false);
   assert.equal(hostAllowedFor('localhost:3001', '127.0.0.1', pub), true);
   assert.equal(originAllowedFor(pub, pub), true);
   assert.equal(originAllowedFor(pub, null), false);
-  assert.equal(originAllowedFor('http://app.tenwise.app', pub), false);
+  assert.equal(originAllowedFor('http://tenwise.app', pub), false);
   assert.equal(originAllowedFor('https://evil.example', pub), false);
   assert.equal(originAllowedFor(undefined, pub), true);
 });

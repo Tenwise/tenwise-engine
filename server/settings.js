@@ -2,7 +2,6 @@ import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DATA_DIR } from './db/connection.js';
 import { isSyncedSetting, MAX_SETTING_LENGTH, SYNCED_SETTING_KEYS } from '../shared/settingsKeys.js';
-import { withCurrentKeys } from '../shared/storageKeys.js';
 
 // Settings live in one JSON file beside the databases: readable, hand-editable
 // and easy to back up. Values are the strings the browser stores.
@@ -11,15 +10,12 @@ export const SETTINGS_PATH = join(DATA_DIR, 'settings.json');
 const isObject = (v) => typeof v === 'object' && v !== null;
 const isPlainObject = (v) => isObject(v) && !Array.isArray(v);
 
-/**
- * All saved settings ({} before the first save, or if the file is unreadable),
- * under their current key names (see shared/storageKeys.js).
- */
+/** All saved settings ({} before the first save, or if the file is unreadable). */
 export function readSettings(path = SETTINGS_PATH) {
   if (!existsSync(path)) return {};
   try {
     const parsed = JSON.parse(readFileSync(path, 'utf8'));
-    return isPlainObject(parsed) ? withCurrentKeys(parsed) : {};
+    return isPlainObject(parsed) ? parsed : {};
   } catch {
     return {};
   }
@@ -50,8 +46,7 @@ const valueAfter = (key, changes, current) => (Object.hasOwn(changes, key) ? cha
  * file is rebuilt from the known keys only, so it never holds anything else.
  * Returns all settings.
  */
-export function updateSettings(values, path = SETTINGS_PATH) {
-  const changes = isPlainObject(values) ? withCurrentKeys(values) : values; // a page loaded before the rename
+export function updateSettings(changes, path = SETTINGS_PATH) {
   validateChanges(changes);
   const current = readSettings(path);
   const next = {};

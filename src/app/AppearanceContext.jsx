@@ -53,7 +53,7 @@ function useColorChoice(presetKey, presetFallback, hexKey, hexFallback) {
 }
 
 function useAppearanceState() {
-  const [theme, setTheme] = useState(() => stored('tenwise-theme', readStored('feedflow-theme') || 'dark'));
+  const [theme, setTheme] = useState(() => stored('tenwise-theme', 'dark'));
   const [appFont, setAppFont] = useState(() => fontById(stored('tenwise-font', 'plex')).id);
   const accent = useColorChoice('tenwise-color', 'amber', 'tenwise-custom-color', '#f59e0b');
   const text = useColorChoice('tenwise-text', 'default', 'tenwise-custom-text', '#e8e6e1');

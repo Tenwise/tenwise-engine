@@ -30,12 +30,3 @@ test('unknown keys, non-strings and oversized values are rejected', () => {
   assert.throws(() => updateSettings(['tenwise-theme'], path), /must be an object/);
   assert.deepEqual(readSettings(path), {});
 });
-
-test('settings saved under the old key names are carried over, and the new name wins', () => {
-  const path = join(mkdtempSync(join(tmpdir(), 'tenwise-settings-')), 'settings.json');
-  writeFileSync(path, JSON.stringify({ 'atlas-pulse-theme': 'light', 'atlas-pulse-font': 'inter', 'tenwise-font': 'lato' }));
-  assert.deepEqual(readSettings(path), { 'tenwise-theme': 'light', 'tenwise-font': 'lato' });
-
-  updateSettings({ 'atlas-pulse-color': 'rose' }, path); // from a page loaded before the rename
-  assert.deepEqual(JSON.parse(readFileSync(path, 'utf8')), { 'tenwise-theme': 'light', 'tenwise-font': 'lato', 'tenwise-color': 'rose' }, 'the file is rewritten under the new names only');
-});

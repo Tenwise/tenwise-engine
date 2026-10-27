@@ -6,10 +6,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Tenwise/tenwise-engine/tags"><img src="https://img.shields.io/badge/version-0.1.2-f59e0b" alt="Version 0.1.2"></a>
+  <a href="https://github.com/Tenwise/tenwise-engine/tags"><img src="https://img.shields.io/badge/version-0.1.3-f59e0b" alt="Version 0.1.3"></a>
   <a href="#license"><img src="https://img.shields.io/badge/license-AGPL--3.0--only-14213d" alt="License: AGPL-3.0-only"></a>
   <img src="https://img.shields.io/badge/AI-on--device%20%C2%B7%20Gemini%20Nano%20%7C%20Ollama-14213d" alt="On-device AI: Gemini Nano or Ollama">
-  <img src="https://img.shields.io/badge/node-22.13%2B%20%7C%2024%2B-14213d" alt="Node 22.13+ or 24+">
+  <img src="https://img.shields.io/badge/node-22.19%2B%20%7C%2024%2B-14213d" alt="Node 22.19+ or 24+">
   <a href="https://github.com/Tenwise/tenwise-engine/actions/workflows/ci.yml"><img src="https://github.com/Tenwise/tenwise-engine/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://tenwise.app/docs/"><img src="https://img.shields.io/badge/docs-tenwise.app%2Fdocs-f59e0b" alt="User guide"></a>
 </p>
@@ -70,7 +70,7 @@ The [user guide](https://tenwise.app/docs/) covers both. Features it marks **Ten
 
 ## Quick start
 
-**You need:** Node.js 22.13+ or 24+ (24 LTS recommended; with nvm, run `nvm install` in the folder), and desktop Google Chrome 148+ for the built-in Gemini Nano AI. Ollama is optional.
+**You need:** Node.js 22.19+ or 24+ (24 LTS recommended; with nvm, run `nvm install` in the folder), and desktop Google Chrome 148+ for the built-in Gemini Nano AI. Ollama is optional.
 
 ```bash
 git clone https://github.com/Tenwise/tenwise-engine.git

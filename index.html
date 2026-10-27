@@ -15,20 +15,9 @@
       // custom color does not flash the defaults. AppearanceContext takes over
       // once React mounts; keep the keys and defaults in sync with it.
       try {
-        // Keys saved before the project was named Tenwise move to their
-        // current names, once (the rule in shared/storageKeys.js).
-        var old = [];
-        for (var i = 0; i < localStorage.length; i++) {
-          if ((localStorage.key(i) || '').indexOf('atlas-pulse-') === 0) old.push(localStorage.key(i));
-        }
-        old.forEach(function (key) {
-          var renamed = 'tenwise-' + key.slice('atlas-pulse-'.length);
-          if (localStorage.getItem(renamed) === null) localStorage.setItem(renamed, localStorage.getItem(key));
-          localStorage.removeItem(key);
-        });
         var get = function (key, fallback) { return localStorage.getItem(key) || fallback; };
         var root = document.documentElement;
-        root.setAttribute('data-theme', get('tenwise-theme', get('feedflow-theme', 'dark')));
+        root.setAttribute('data-theme', get('tenwise-theme', 'dark'));
         var fontStack = localStorage.getItem('tenwise-font-stack');
         if (fontStack) root.style.setProperty('--font-family', fontStack);
         root.setAttribute('data-color', get('tenwise-color', 'amber'));

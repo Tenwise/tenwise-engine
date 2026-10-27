@@ -10,9 +10,6 @@ PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG_DIR="$HOME/Library/Logs/tenwise"
 NODE_BIN="$(command -v node)"
 DOMAIN="gui/$(id -u)"
-# The service's label before the project was named Tenwise: removed on install
-# and uninstall, so an older install never runs beside this one.
-OLD_LABEL="com.socraticsurge.atlas-pulse"
 
 build() {
   (cd "$APP_DIR" && npm run build)
@@ -30,7 +27,7 @@ sync_deps() {
 
 # Settings the server reads, carried into the service when they are set at
 # install (launchd starts it without your shell's environment).
-PASSED_ENV=(CHROME_PATH TENWISE_DATA_DIR ATLAS_DATA_DIR OLLAMA_HOST) # ATLAS_DATA_DIR: its name before Tenwise
+PASSED_ENV=(CHROME_PATH TENWISE_DATA_DIR OLLAMA_HOST)
 
 xml_escape() {
   local s=$1
@@ -77,23 +74,16 @@ $(passed_env)
 PLIST
 }
 
-remove_old_service() {
-  launchctl bootout "$DOMAIN/$OLD_LABEL" 2>/dev/null || true
-  rm -f "$HOME/Library/LaunchAgents/$OLD_LABEL.plist"
-}
-
 case "${1:-}" in
   install)
     sync_deps
     build
     write_plist
-    remove_old_service
     launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
     launchctl bootstrap "$DOMAIN" "$PLIST"
     echo "Tenwise running at http://tenwise.localhost:$PORT"
     ;;
   uninstall)
-    remove_old_service
     launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
     rm -f "$PLIST"
     echo "Tenwise service removed"
