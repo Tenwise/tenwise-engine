@@ -72,13 +72,13 @@ function useScrollTopOnQuery(scrollRef, query) {
 }
 
 // The view's current name (a feed, folder or collection may have been renamed
-// since it was opened); a feed narrowed to one author is named after them.
+// since it was opened); a feed narrowed to one author, or a group of them, is named after it.
 function useLiveViewTitle(activeView) {
   const { feeds, folders } = useLibrary();
   const collections = useCollections();
   const filters = useRuleFilters();
   const sources = { feed: feeds, folder: folders, collection: collections, filter: filters };
-  const item = activeView.author ? null : (sources[activeView.type] ?? []).find((x) => x.id === activeView.id);
+  const item = activeView.author || activeView.authorGroup ? null : (sources[activeView.type] ?? []).find((x) => x.id === activeView.id);
   return viewTitle({ ...activeView, name: item?.title ?? item?.name ?? activeView.name });
 }
 
@@ -117,8 +117,8 @@ function useListActions({ data, activeView, selection, visible, sourceOf, onCoun
   // Every unread article in the view, loaded or not; the counts come back from the server.
   const markAllRead = useCallback(() => commit(
     () => data.updateLocal(data.articles.filter((a) => !a.isRead).map((a) => a.id), { isRead: 1 }),
-    async () => { await markViewRead(activeView.type, activeView.id, activeView.author); data.reload(); },
-  ), [data, commit, activeView.type, activeView.id, activeView.author]);
+    async () => { await markViewRead(activeView.type, activeView.id, activeView.author, activeView.authorGroup); data.reload(); },
+  ), [data, commit, activeView.type, activeView.id, activeView.author, activeView.authorGroup]);
 
   return useMemo(() => ({
     clear: selection.clear,

@@ -15,8 +15,8 @@ const SEARCH_DEBOUNCE_MS = 150;
 function useArticleMatches(view, query) {
   const q = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS);
   const { data } = useQuery({
-    queryKey: ['palette-articles', view.type, view.id, view.author, q],
-    queryFn: () => fetchArticlePage(view.type, view.id, { q, author: view.author, limit: ARTICLE_LIMIT }),
+    queryKey: ['palette-articles', view.type, view.id, view.author, view.authorGroup, q],
+    queryFn: () => fetchArticlePage(view.type, view.id, { q, author: view.author, authorGroup: view.authorGroup, limit: ARTICLE_LIMIT }),
     enabled: Boolean(q),
     placeholderData: keepPreviousData,
   });

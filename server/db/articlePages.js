@@ -28,7 +28,8 @@ const SAVE_VIEWS = new Set(['saved', 'unsorted', 'collection']);
 /**
  * SQL condition (and its parameters) for the articles in a view, without
  * muted ones. `author` narrows a feed to one author's articles (a newsletter
- * sender in the inbox feed); other views ignore it.
+ * sender in the inbox feed), or with `{ group }` to a group of its authors
+ * (PR-26); other views ignore it.
  */
 export function viewWhere(view, id, rules = currentRules(), author = '') {
   const where = byAuthor(baseWhere(view, id), view, author);
@@ -47,9 +48,15 @@ function filterWhere(id) {
   return { sql: `${rule.sql}${folder} AND ${FROM_ACTIVE_FEED}`, params: [...rule.params, ...(filter.folderId ? [filter.folderId] : [])] };
 }
 
-const byAuthor = (where, view, author) => (view === 'feed' && author
-  ? { sql: `${where.sql} AND author = ?`, params: [...where.params, author] }
-  : where);
+function byAuthor(where, view, author) {
+  if (view !== 'feed' || !author) return where;
+  if (typeof author === 'object') {
+    return Number.isInteger(author.group)
+      ? { sql: `${where.sql} AND author IN (SELECT author FROM author_settings WHERE group_id = ?)`, params: [...where.params, author.group] }
+      : where;
+  }
+  return { sql: `${where.sql} AND author = ?`, params: [...where.params, author] };
+}
 
 function baseWhere(view, id) {
   switch (view) {
@@ -180,7 +187,7 @@ export function feedAuthors(feedId) {
   ).all(...where.params, MAX_AUTHORS);
 }
 
-/** Marks every unread article in a view (of one author, for a feed) read; returns how many changed. */
+/** Marks every unread article in a view (of one author or group of them, for a feed) read; returns how many changed. */
 export function markViewRead(view, id, author = '') {
   const where = viewWhere(view, id, currentRules(), author);
   return db.prepare(`UPDATE articles SET is_read = 1 WHERE ${where.sql} AND is_read = 0`).run(...where.params).changes;

@@ -227,18 +227,27 @@ export async function fetchRefreshStatus() { return request('/refresh', 'Failed 
 // Articles
 /**
  * One page of a view's articles: { articles, total, unread, facets, nextOffset }.
- * options: { q, filters: { sentiment, … }, aiOnly, offset, limit, author (a feed's, to narrow it) }.
+ * options: { q, filters: { sentiment, … }, aiOnly, offset, limit, author or
+ * authorGroup (a feed's author or group of them, to narrow it) }.
  */
-export async function fetchArticlePage(view = 'all', id, { q, filters = {}, aiOnly, read, after, author, offset = 0, limit } = {}) {
-  const fields = { view, id, author, offset, q, aiOnly: aiOnly ? '1' : '', read, after, limit, ...filters };
+export async function fetchArticlePage(view = 'all', id, { q, filters = {}, aiOnly, read, after, author, authorGroup, offset = 0, limit } = {}) {
+  const fields = { view, id, author, authorGroup, offset, q, aiOnly: aiOnly ? '1' : '', read, after, limit, ...filters };
   const set = Object.entries(fields).filter(([, value]) => value !== undefined && value !== null && value !== '');
   return readerFetch(`/articles/page?${new URLSearchParams(set.map(([k, v]) => [k, String(v)]))}`);
 }
-export async function markViewRead(view, id, author) {
-  return readerFetch('/articles/mark-view-read', json({ view, id, author }));
+export async function markViewRead(view, id, author, authorGroup) {
+  return readerFetch('/articles/mark-view-read', json({ view, id, author, authorGroup }));
 }
 /** A feed's authors, latest first: [{ author, total, unread }]. */
 export async function fetchFeedAuthors(feedId) { return readerFetch(`/feeds/${feedId}/authors`); }
+/** A feed's author groups and its authors' settings (PR-26): { groups, authors }. */
+export async function fetchAuthorGroups(feedId) { return readerFetch(`/feeds/${feedId}/author-groups`); }
+export async function createAuthorGroup(feedId, name) { return readerFetch(`/feeds/${feedId}/author-groups`, json({ name })); }
+/** Renames or folds a group: { name?, collapsed? }. */
+export async function updateAuthorGroup(id, changes) { return readerFetch(`/author-groups/${id}`, json(changes, 'PUT')); }
+export async function deleteAuthorGroup(id) { return readerFetch(`/author-groups/${id}`, { method: 'DELETE' }); }
+/** An author's group (null for none) or hidden flag: { groupId?, hidden? }. */
+export async function setAuthorSettings(feedId, author, settings) { return readerFetch(`/feeds/${feedId}/author-settings`, json({ author, ...settings }, 'PUT')); }
 export async function fetchArticle(id) { return readerFetch(`/articles/${id}`); }
 /** The article's picture: its own, else its page's preview image (UX-8) → { imageUrl } (null when none). */
 export async function fetchArticleImage(id) { return readerFetch(`/articles/${id}/image`); }

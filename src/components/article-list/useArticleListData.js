@@ -34,11 +34,12 @@ function useRefetchOnRefresh(refreshKey, queryClient) {
  */
 export function useArticleListData(activeView, refreshKey, feeds, { q, filters, aiOnly, read }) {
   const queryClient = useQueryClient();
-  const viewKey = `${activeView.type}:${activeView.id}${activeView.author ? `:${activeView.author}` : ''}`;
+  const narrowed = activeView.authorGroup ? `:group:${activeView.authorGroup}` : activeView.author ? `:${activeView.author}` : '';
+  const viewKey = `${activeView.type}:${activeView.id}${narrowed}`;
   const query = useInfiniteQuery({
     queryKey: [ARTICLES_KEY, viewKey, { q, filters, aiOnly, read, after: activeView.since }],
     queryFn: ({ pageParam }) => fetchArticlePage(activeView.type, activeView.id, {
-      q, filters, aiOnly, read, after: activeView.since, author: activeView.author, offset: pageParam, limit: PAGE_SIZE,
+      q, filters, aiOnly, read, after: activeView.since, author: activeView.author, authorGroup: activeView.authorGroup, offset: pageParam, limit: PAGE_SIZE,
     }),
     initialPageParam: 0,
     getNextPageParam: (last) => last.nextOffset ?? undefined,

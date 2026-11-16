@@ -10,6 +10,7 @@ import {
   DB_PATH,
 } from '../db/reader.js';
 import { currentRules, feedAuthors, getArticlePage, markViewRead } from '../db/articlePages.js';
+import { createAuthorGroup, deleteAuthorGroup, listAuthorGroups, setAuthorSettings, updateAuthorGroup } from '../db/authorGroups.js';
 import { FILTER_KEYS } from '../../shared/aiFilters.js';
 import { findPageImage } from '../utils/pageImage.js';
 
@@ -95,6 +96,54 @@ router.get('/feeds/:id/authors', (req, res) => {
   catch (err) { sendDbError(res, err); }
 });
 
+// Sender groups (PR-26): the inbox feed's senders, organised in the sidebar.
+const sendGroupError = (res, err) => (err.status ? res.status(err.status).json({ error: err.message }) : sendDbError(res, err));
+const idParam = (req) => Number(req.params.id);
+
+/** GET /feeds/:id/author-groups — { groups: [{ id, name, collapsed }], authors: [{ author, groupId, hidden }] }. */
+router.get('/feeds/:id/author-groups', (req, res) => {
+  const id = idParam(req);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' });
+  try { res.json(listAuthorGroups(id)); }
+  catch (err) { sendGroupError(res, err); }
+});
+
+/** POST /feeds/:id/author-groups { name } — a new group: { id, name, collapsed }. */
+router.post('/feeds/:id/author-groups', (req, res) => {
+  const id = idParam(req);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' });
+  try { res.status(201).json(createAuthorGroup(id, req.body?.name)); }
+  catch (err) { sendGroupError(res, err); }
+});
+
+/** PUT /author-groups/:id { name?, collapsed? } — renames or folds a group. */
+router.put('/author-groups/:id', (req, res) => {
+  const id = idParam(req);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' });
+  try {
+    const group = updateAuthorGroup(id, { name: req.body?.name, collapsed: req.body?.collapsed });
+    return group ? res.json(group) : res.status(404).json({ error: 'Not found' });
+  } catch (err) { return sendGroupError(res, err); }
+});
+
+/** DELETE /author-groups/:id — deletes a group; its senders become ungrouped. */
+router.delete('/author-groups/:id', (req, res) => {
+  const id = idParam(req);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' });
+  try { return deleteAuthorGroup(id) ? res.json({ deleted: true }) : res.status(404).json({ error: 'Not found' }); }
+  catch (err) { return sendGroupError(res, err); }
+});
+
+/** PUT /feeds/:id/author-settings { author, groupId?, hidden? } — a sender's group (null for none) or hidden flag. */
+router.put('/feeds/:id/author-settings', (req, res) => {
+  const id = idParam(req);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' });
+  const { author, groupId, hidden } = req.body ?? {};
+  if (groupId !== undefined && groupId !== null && !Number.isInteger(groupId)) return res.status(400).json({ error: 'invalid groupId' });
+  try { res.json(setAuthorSettings(id, author, { groupId, hidden: hidden === undefined ? undefined : Boolean(hidden) })); }
+  catch (err) { sendGroupError(res, err); }
+});
+
 router.post('/feeds', (req, res) => {
   const { url } = req.body;
   if (!url?.trim()) return res.status(400).json({ error: 'url is required' });
@@ -160,15 +209,22 @@ const text = (value) => (typeof value === 'string' ? value : '');
 // An article's author is at most this long here; a longer one matches nothing anyway.
 const MAX_AUTHOR = 300;
 
-// The view a request names, or null if it isn't one. A feed may be narrowed to one author.
-function viewOf({ view = 'all', id, author }) {
+// A feed's narrowing: a group of its authors (PR-26) wins over one author.
+function narrowing({ author, authorGroup }) {
+  const group = Number(authorGroup);
+  return authorGroup !== undefined && authorGroup !== '' && Number.isInteger(group) ? { group } : text(author).slice(0, MAX_AUTHOR);
+}
+
+// The view a request names, or null if it isn't one. A feed may be narrowed
+// to one author, or to a group of them.
+function viewOf({ view = 'all', id, author, authorGroup }) {
   if (!Object.hasOwn(VIEWS, view)) return null;
   const viewId = Number(id);
   const missingId = VIEWS[view] && !Number.isInteger(viewId);
-  return missingId ? null : { view, id: viewId, author: view === 'feed' ? text(author).slice(0, MAX_AUTHOR) : '' };
+  return missingId ? null : { view, id: viewId, author: view === 'feed' ? narrowing({ author, authorGroup }) : '' };
 }
 
-/** GET /articles/page?view&id&author&q&aiOnly=1&read=unread|read&after=<ISO>&sentiment=…&offset&limit — one page of a view. */
+/** GET /articles/page?view&id&author|authorGroup&q&aiOnly=1&read=unread|read&after=<ISO>&sentiment=…&offset&limit — one page of a view. */
 router.get('/articles/page', (req, res) => {
   const target = viewOf(req.query);
   if (!target) return res.status(400).json({ error: 'invalid view' });
@@ -187,7 +243,7 @@ router.get('/articles/page', (req, res) => {
   } catch (err) { sendDbError(res, err); }
 });
 
-/** POST /articles/mark-view-read { view, id, author? } — marks every unread article in the view read. */
+/** POST /articles/mark-view-read { view, id, author?, authorGroup? } — marks every unread article in the view read. */
 router.post('/articles/mark-view-read', (req, res) => {
   const target = viewOf(req.body ?? {});
   if (!target) return res.status(400).json({ error: 'invalid view' });

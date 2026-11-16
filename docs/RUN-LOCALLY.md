@@ -2,7 +2,7 @@
 
 This guide takes you from nothing to the Tenwise Engine running on your own computer, using only its GitHub repository: what to install, how to get it, how to configure it, where your data lives, how to update it, and how to tell which version you're running. The [README](../README.md) has the short version and the full feature list.
 
-Last checked with **Tenwise Engine 0.2.0** on 15 November 2026, on macOS (Apple silicon) with Node.js 24.22 and npm 11.19.
+Last checked with **Tenwise Engine 0.3.0** on 16 November 2026, on macOS (Apple silicon) with Node.js 24.22 and npm 11.19.
 
 ## What you need
 

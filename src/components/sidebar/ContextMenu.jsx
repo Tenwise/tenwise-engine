@@ -4,6 +4,7 @@ import {
 } from 'react-icons/hi2';
 import { cn } from '@/lib/utils';
 import { useMenuKeys } from '../../hooks/useMenuKeys.js';
+import { useOnScreen } from '../../hooks/useOnScreen.js';
 
 // A menu item; with `checked` it is one choice of a set (menuitemradio).
 function Item({ onClick, danger, checked, children }) {
@@ -93,6 +94,7 @@ const MENUS = {
 /** Right-click / "…" menu for a folder, feed or collection. menu = { type, id, x, y }. */
 export function ContextMenu({ menu, feeds, folders, actions, onClose }) {
   const [menuRef, onMenuKeyDown] = useMenuKeys(Boolean(menu), onClose);
+  const boxRef = useOnScreen(menu);
   if (!menu) return null;
   const done = (fn) => { fn(); onClose(); };
   const { Menu, label } = MENUS[menu.type];
@@ -100,7 +102,7 @@ export function ContextMenu({ menu, feeds, folders, actions, onClose }) {
     <>
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pointer-only backdrop; the keyboard closes the menu with Escape (useMenuKeys) */}
       <div className="fixed inset-0 z-[499]" onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }} />
-      <div className="fixed z-[500] min-w-52 rounded-lg border border-border bg-[var(--bg-modal)] p-1 shadow-xl" style={{ left: menu.x, top: menu.y }}>
+      <div ref={boxRef} className="fixed z-[500] min-w-52 rounded-lg border border-border bg-[var(--bg-modal)] p-1 shadow-xl" style={{ left: menu.x, top: menu.y }}>
         {menu.type === 'feed' && <RefreshError feed={feeds.find((f) => f.id === menu.id)} />}
         <div role="menu" aria-label={label} tabIndex={-1} ref={menuRef} onKeyDown={onMenuKeyDown}>
           <Menu id={menu.id} feeds={feeds} folders={folders} actions={actions} done={done} />

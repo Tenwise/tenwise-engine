@@ -282,4 +282,26 @@ export const MIGRATIONS = [
       ALTER TABLE articles ADD COLUMN resolved_link TEXT;
     `),
   },
+  {
+    version: 17,
+    description: "Groups of a feed's authors, and an author's group or hidden flag (PR-26): newsletter senders organised in the sidebar",
+    up: (db) => db.exec(`
+      CREATE TABLE author_groups (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        feed_id    INTEGER NOT NULL REFERENCES feeds(id) ON DELETE CASCADE,
+        name       TEXT NOT NULL,
+        collapsed  INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+      CREATE INDEX idx_author_groups_feed ON author_groups(feed_id);
+      CREATE TABLE author_settings (
+        feed_id  INTEGER NOT NULL REFERENCES feeds(id) ON DELETE CASCADE,
+        author   TEXT NOT NULL,
+        group_id INTEGER REFERENCES author_groups(id) ON DELETE SET NULL,
+        hidden   INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (feed_id, author)
+      );
+      CREATE INDEX idx_author_settings_group ON author_settings(group_id);
+    `),
+  },
 ];

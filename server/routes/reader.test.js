@@ -216,6 +216,49 @@ test('a feed by one author: the page, marking read, and the feed\'s authors', as
   assert.deepEqual((await api.get('/feeds/999999/authors')).body, []);
 });
 
+test('sender groups: make, move, hide, open a group, fold, rename, delete (PR-26)', async () => {
+  const feed = await newFeed();
+  await addArticles(feed.id, 4, (i) => ({ author: ['Tech Weekly', 'Tech Daily', 'Money Letter', 'Tech Weekly'][i] }));
+  assert.deepEqual((await api.get(`/feeds/${feed.id}/author-groups`)).body, { groups: [], authors: [] });
+
+  const tech = (await api.post(`/feeds/${feed.id}/author-groups`, { name: '  Tech   reads ' })).body;
+  assert.deepEqual(tech, { id: tech.id, name: 'Tech reads', collapsed: false });
+  assert.equal((await api.post(`/feeds/${feed.id}/author-groups`, { name: ' ' })).status, 400, 'a group needs a name');
+  assert.equal((await api.post('/feeds/999999/author-groups', { name: 'X' })).status, 404);
+
+  for (const author of ['Tech Weekly', 'Tech Daily']) {
+    assert.deepEqual((await api.put(`/feeds/${feed.id}/author-settings`, { author, groupId: tech.id })).body, { author, groupId: tech.id, hidden: false });
+  }
+  assert.deepEqual((await api.put(`/feeds/${feed.id}/author-settings`, { author: 'Money Letter', hidden: true })).body, { author: 'Money Letter', groupId: null, hidden: true });
+  assert.equal((await api.put(`/feeds/${feed.id}/author-settings`, { author: 'Tech Daily', groupId: 999999 })).status, 400, 'another feed\'s or no group');
+  assert.equal((await api.put(`/feeds/${feed.id}/author-settings`, { groupId: tech.id })).status, 400, 'an author is required');
+
+  // The group as a view: its senders' articles, its unread count, marking it read.
+  const page = (await api.get(`/articles/page?view=feed&id=${feed.id}&authorGroup=${tech.id}`)).body;
+  assert.deepEqual([page.total, page.unread], [3, 3]);
+  assert.ok(page.articles.every((a) => a.author.startsWith('Tech')));
+  assert.deepEqual((await api.post('/articles/mark-view-read', { view: 'feed', id: feed.id, authorGroup: tech.id })).body, { changed: 3 });
+  assert.equal((await api.get('/articles/counts')).body.unreadByFeed[feed.id], 1, 'only Money Letter is unread');
+
+  // Hiding keeps a sender's articles in the feed.
+  assert.equal((await api.get(`/articles/page?view=feed&id=${feed.id}`)).body.total, 4);
+
+  assert.deepEqual((await api.put(`/author-groups/${tech.id}`, { name: 'Tech', collapsed: true })).body, { id: tech.id, name: 'Tech', collapsed: true });
+  assert.equal((await api.put('/author-groups/999999', { name: 'X' })).status, 404);
+  const listed = (await api.get(`/feeds/${feed.id}/author-groups`)).body;
+  assert.deepEqual(listed.groups, [{ id: tech.id, name: 'Tech', collapsed: true }]);
+  assert.deepEqual(listed.authors.map((a) => [a.author, a.groupId, a.hidden]), [['Money Letter', null, true], ['Tech Daily', tech.id, false], ['Tech Weekly', tech.id, false]]);
+
+  // Deleting the group ungroups its senders; nothing else changes.
+  assert.deepEqual((await api.delete(`/author-groups/${tech.id}`)).body, { deleted: true });
+  assert.equal((await api.delete(`/author-groups/${tech.id}`)).status, 404);
+  const after = (await api.get(`/feeds/${feed.id}/author-groups`)).body;
+  assert.deepEqual(after.groups, []);
+  assert.ok(after.authors.every((a) => a.groupId === null));
+  assert.equal((await api.get(`/articles/page?view=feed&id=${feed.id}&authorGroup=${tech.id}`)).body.total, 0, 'a deleted group matches nothing');
+  assert.equal((await api.get('/feeds/abc/author-groups')).status, 400);
+});
+
 test('the AI queue: queue count, claims and reset', async () => {
   const feed = await newFeed();
   const [newest, , oldest] = await addArticles(feed.id, 3);
