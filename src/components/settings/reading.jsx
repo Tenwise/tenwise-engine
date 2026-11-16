@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { emit } from '../../lib/appEvents.js';
-import { VIEW_MODES } from '../article-list/viewModes.js';
+import { DEFAULT_VIEW_MODE, VIEW_MODES, viewModeOf } from '../article-list/viewModes.js';
 import { AUTO_REFRESH_OPTIONS, getAutoRefreshMinutes, saveAutoRefreshMinutes } from '../../utils/constants.js';
 import {
   CONTENT_WIDTHS, getReaderSettings, LINE_HEIGHTS, READER_SETTINGS_STORAGE_KEY,
@@ -13,7 +13,7 @@ const VIEW_MODE_KEY = 'tenwise-view-mode';
 const FONT_SIZES = [15, 16, 17, 18, 19, 20, 22].map((n) => ({ value: n, label: `${n}` }));
 
 export function ViewModeControl() {
-  const [mode, setMode] = useState(() => readStored(VIEW_MODE_KEY, 'rows'));
+  const [mode, setMode] = useState(() => viewModeOf(readStored(VIEW_MODE_KEY, DEFAULT_VIEW_MODE)));
   const change = (next) => {
     setMode(next);
     writeStored(VIEW_MODE_KEY, next); // for when the list isn't on screen

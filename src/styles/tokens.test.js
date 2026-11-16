@@ -47,7 +47,7 @@ function failures(fg, tokens, extra = {}) {
 }
 
 test('the token blocks parse', () => {
-  for (const tokens of Object.values(THEMES)) for (const name of [...SURFACES, 'text-tertiary', 'danger']) assert.match(tokens[name], /^#/);
+  for (const tokens of Object.values(THEMES)) for (const name of [...SURFACES, 'text-tertiary', 'danger', 'warning', 'success']) assert.match(tokens[name], /^#/);
   assert.equal(Object.keys(accentPresets('dark')).length, 6);
   assert.equal(Object.keys(accentPresets('light')).length, 6);
   assert.ok(DIMMED > 0 && DIMMED <= 1, `--dimmed-opacity (${DIMMED})`);
@@ -55,7 +55,8 @@ test('the token blocks parse', () => {
 
 for (const [theme, tokens] of Object.entries(THEMES)) {
   test(`${theme}: text tokens reach 4.5:1 on every surface`, () => {
-    for (const name of ['text-primary', 'text-secondary', 'text-tertiary', 'danger']) {
+    // Status text too: the alert badge and the brief's evidence check (UX-6).
+    for (const name of ['text-primary', 'text-secondary', 'text-tertiary', 'danger', 'warning', 'success']) {
       assert.deepEqual(failures(tokens[name], tokens), [], `--${name} (${tokens[name]})`);
     }
   });

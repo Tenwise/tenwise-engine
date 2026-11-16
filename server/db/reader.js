@@ -35,11 +35,15 @@ function toArticle(row) {
     title: row.title,
     link: row.link,
     canonicalLink: row.canonical_link,
+    // The publication the item names, and the publisher's URL for a resolved aggregator link (BRF-23).
+    sourceTitle: row.source_title ?? null,
+    resolvedLink: row.resolved_link ?? null,
     publishedAt: row.published_at,
     isRead: row.is_read,
     isBookmarked: row.is_bookmarked,
     savedAt: row.saved_at ?? null,
     note: row.note ?? null,
+    highlightCount: row.highlight_count ?? 0,
     content: row.content,
     summary: row.summary,
     author: row.author,
@@ -60,8 +64,10 @@ function toArticle(row) {
 // guid/canonical link/created-at/favicon (the list uses the feed's favicon),
 // and the excerpt cut to what a preview line can show.
 export const LIST_EXCERPT_CHARS = 200;
-export const LIST_COLUMNS = `id, feed_id, title, link, published_at, is_read, is_bookmarked, saved_at, note, author,
-  image_url, ai_status, ai_summary, ai_summary_source, ai_analysis, substr(excerpt, 1, ${LIST_EXCERPT_CHARS}) AS excerpt`;
+// How many highlights the article has (PR-7), for the list's mark.
+const HIGHLIGHT_COUNT = '(SELECT COUNT(*) FROM highlights h WHERE h.article_url = articles.link) AS highlight_count';
+export const LIST_COLUMNS = `id, feed_id, title, link, source_title, resolved_link, published_at, is_read, is_bookmarked, saved_at, note, author,
+  image_url, ai_status, ai_summary, ai_summary_source, ai_analysis, substr(excerpt, 1, ${LIST_EXCERPT_CHARS}) AS excerpt, ${HIGHLIGHT_COUNT}`;
 
 export function toListItem(row) {
   const { content: _content, summary: _summary, description: _description, ...item } = toArticle(row);
@@ -116,7 +122,7 @@ const stmts = {
   deleteArticlesByFeedList: (ids) =>
     db.prepare(`DELETE FROM articles WHERE feed_id IN (${ids.map(() => '?').join(',')})`),
 
-  getArticleById: db.prepare(`SELECT * FROM articles WHERE id = ?`),
+  getArticleById: db.prepare(`SELECT *, ${HIGHLIGHT_COUNT} FROM articles WHERE id = ?`),
   getSummarySource: db.prepare(`SELECT ai_summary_source FROM articles WHERE id = ?`),
   getArticleByLink: db.prepare(`SELECT * FROM articles WHERE link = ? LIMIT 1`),
   getUnreadByFeed: db.prepare(
@@ -326,6 +332,7 @@ function articleRow(feedId, a, now) {
     content,
     summary,
     author: toSqlText(a.author),
+    source_title: toSqlText(a.sourceTitle),
     image_url: toSqlText(a.imageUrl),
     description: toSqlText(a.description),
     favicon: null,
@@ -337,10 +344,10 @@ function articleRow(feedId, a, now) {
 const insertArticle = db.prepare(
   `INSERT OR IGNORE INTO articles
      (feed_id, guid, title, link, canonical_link, published_at, is_read, is_bookmarked,
-      content, summary, author, image_url, description, ai_status, favicon, created_at, excerpt)
+      content, summary, author, source_title, image_url, description, ai_status, favicon, created_at, excerpt)
    VALUES
      (@feed_id, @guid, @title, @link, @canonical_link, @published_at, 0, 0,
-      @content, @summary, @author, @image_url, @description, 'none', @favicon, @created_at, @excerpt)`
+      @content, @summary, @author, @source_title, @image_url, @description, 'none', @favicon, @created_at, @excerpt)`
 );
 const indexArticle = db.prepare(`INSERT INTO articles_fts (rowid, body) VALUES (?, ?)`);
 
@@ -474,6 +481,22 @@ export function updateArticle(id, data) {
   return getArticleById(id);
 }
 
+/** Stores a picture found for an article whose feed gave none (UX-8); never replaces one it has. */
+const setResolved = db.prepare('UPDATE articles SET resolved_link = ? WHERE link = ?');
+/**
+ * The publisher's URL for the articles whose link is an aggregator's, once a
+ * plugin resolved it for the reader (BRF-23): citations then name the page
+ * itself. Only an http(s) URL is kept.
+ */
+export function setResolvedLink(link, resolved) {
+  if (!link || !/^https?:\/\//i.test(resolved ?? '') || resolved === link) return 0;
+  return setResolved.run(resolved, link).changes;
+}
+
+export function setArticleImage(id, imageUrl) {
+  db.prepare("UPDATE articles SET image_url = ? WHERE id = ? AND COALESCE(image_url, '') = ''").run(imageUrl, id);
+}
+
 export function bulkUpdateArticles(ids, data) {
   if (ids.length === 0) return;
   const { fields, values, unsave } = articleChanges(data, BULK_KEYS);
@@ -554,18 +577,21 @@ export function resetProcessingToQueued(now = Date.now()) {
   })();
 }
 
-export function getCounts() {
+// Counts without muted articles (PR-5), so the sidebar agrees with the lists.
+export function getCounts(mute = null) {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
-  const unreadRows = stmts.getUnreadByFeed.all();
+  const unreadRows = mute
+    ? db.prepare(`SELECT feed_id, COUNT(*) AS cnt FROM articles WHERE is_read = 0 AND ${FROM_ACTIVE_FEED} AND ${mute.sql} GROUP BY feed_id`).all(...mute.params)
+    : stmts.getUnreadByFeed.all();
   const unreadByFeed = {};
   let total = 0;
   for (const r of unreadRows) { unreadByFeed[r.feed_id] = r.cnt; total += r.cnt; }
   const savedCount = stmts.getSavedCount.get().cnt;
   const unsortedCount = stmts.getUnsortedCount.get().cnt;
   const todayCount = db.prepare(
-    `SELECT COUNT(*) AS cnt FROM articles WHERE published_at >= ? AND ${FROM_ACTIVE_FEED}`
-  ).get(start.toISOString()).cnt;
+    `SELECT COUNT(*) AS cnt FROM articles WHERE published_at >= ? AND ${FROM_ACTIVE_FEED}${mute ? ` AND ${mute.sql}` : ''}`
+  ).get(start.toISOString(), ...(mute?.params ?? [])).cnt;
   return { unreadByFeed, total, savedCount, unsortedCount, todayCount };
 }
 

@@ -50,12 +50,33 @@ a:hover {
 
 /* Phones: the sidebar floats over the list, the list fills the screen, and
    an open article covers it. */
+/* The drawer's backdrop: only on phones. */
+.sidebar-backdrop {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .sidebar-panel {
     position: fixed;
     inset: 0 auto 0 52px;
     z-index: 100;
     box-shadow: var(--shadow-lg);
+  }
+
+  /* Nothing to read yet, and no keyboard: the list has the screen. */
+  .reader-placeholder {
+    display: none !important;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0 0 0 52px;
+    z-index: 99;
+    border: 0;
+    padding: 0;
+    background: var(--bg-modal-overlay);
+    cursor: pointer;
   }
 
   .article-list-panel {

@@ -21,3 +21,17 @@ test('unknown keys in the file are ignored', () => {
   const plan = planBoot({ 'something-else': 'x' }, local({}));
   assert.deepEqual(plan, { toLocal: {}, toServer: {} });
 });
+
+test('without seeding, an empty server file stays empty and this browser forgets its synced settings', () => {
+  const plan = planBoot({}, local({ 'tenwise-ai-settings': '{"customInstructions":"A"}', 'tenwise-sidebar-width': '300' }), { seed: false });
+  assert.deepEqual(plan, { toLocal: { 'tenwise-ai-settings': null }, toServer: {} });
+});
+
+test('without seeding, this browser mirrors the server: its values copied, other synced keys removed', () => {
+  const plan = planBoot(
+    { 'tenwise-theme': 'light' },
+    local({ 'tenwise-theme': 'dark', 'tenwise-rules': '[{"text":"a"}]', 'tenwise-font': null }),
+    { seed: false },
+  );
+  assert.deepEqual(plan, { toLocal: { 'tenwise-theme': 'light', 'tenwise-rules': null }, toServer: {} });
+});

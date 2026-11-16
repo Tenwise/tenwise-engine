@@ -4,7 +4,13 @@ import { cn } from '@/lib/utils';
 import { useClickOutside } from '../../hooks/useClickOutside.js';
 import { useMenuKeys } from '../../hooks/useMenuKeys.js';
 
-const modelLabel = (name) => (name ? name.split(':')[0].replace(/-/g, ' ') : 'No model');
+// A plugin engine's model may carry its own label; an Ollama name drops its tag.
+const shortName = (m) => m.label ?? m.name.split(':')[0];
+const modelLabel = (name, models) => {
+  if (!name) return 'No model';
+  const model = models.find((m) => m.name === name);
+  return model?.label ?? name.split(':')[0].replace(/-/g, ' ');
+};
 
 /** Header menu for choosing the rail's AI model. */
 export default function ModelPicker({ models, selectedModel, onSelect }) {
@@ -22,7 +28,7 @@ export default function ModelPicker({ models, selectedModel, onSelect }) {
         aria-expanded={open}
         className="flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-transparent px-2 font-mono text-[11px] text-muted-foreground hover:text-foreground"
       >
-        {modelLabel(selectedModel)}
+        {modelLabel(selectedModel, models)}
         <HiOutlineChevronDown className={cn('size-3 transition-transform', open && 'rotate-180')} />
       </button>
       {open && models.length > 0 && (
@@ -36,7 +42,7 @@ export default function ModelPicker({ models, selectedModel, onSelect }) {
               onClick={() => { onSelect(m.name); setOpen(false); }}
               className="flex w-full cursor-pointer items-center gap-2 rounded border-0 bg-transparent px-2 py-1.5 text-left text-[12.5px] text-foreground hover:bg-[var(--bg-hover)]"
             >
-              <span className="flex-1 truncate">{m.name.split(':')[0]}</span>
+              <span className="flex-1 truncate">{shortName(m)}</span>
               {m.parameterSize && <span className="font-mono text-[10.5px] text-[var(--text-tertiary)]">{m.parameterSize}</span>}
               {m.name === selectedModel && <HiOutlineCheck className="size-3.5 text-primary" />}
             </button>

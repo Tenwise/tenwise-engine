@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { downloadNano } from '../../utils/chromeAI.js';
-import { NANO_TEXT, useNanoState } from './nanoState.js';
+import { nanoText, useNanoState } from './nanoState.js';
 import { SetupActions, SetupCard } from './OllamaStates.jsx';
 
 const NEEDS_DOWNLOAD = new Set(['downloadable', 'downloading']);
@@ -49,7 +49,7 @@ export function NanoStatusLine({ onChange }) {
     <div className="flex flex-col gap-2">
       <span className="flex items-start gap-2 text-[13px] text-muted-foreground">
         <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', state === 'ready' ? 'bg-[var(--success,#3fb950)]' : 'bg-[var(--text-tertiary)]')} />
-        {NANO_TEXT[state]}
+        {nanoText(state)}
       </span>
       {NEEDS_DOWNLOAD.has(state) && <DownloadNano state={state} onDone={done} />}
     </div>
@@ -61,7 +61,7 @@ export function NanoDownloadNotice({ onDone }) {
   const [state] = useNanoState();
   return (
     <SetupCard emoji="✨" title="Gemini Nano needs a one-time download" compact>
-      <p>{NANO_TEXT[state === 'downloading' ? 'downloading' : 'downloadable']}</p>
+      <p>{nanoText(state === 'downloading' ? 'downloading' : 'downloadable')}</p>
       <DownloadNano state={state} onDone={onDone} />
     </SetupCard>
   );

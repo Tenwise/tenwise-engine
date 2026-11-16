@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify';
 import { EMBED_HOSTS } from '../../../shared/embedHosts.js';
+import { foreignImageUrl, foreignSrcset } from '../../utils/imageUrl.js';
 import { giveAlt, nameEmptyLink } from './accessibleMarkup.js';
 
 // Feed HTML is untrusted. We allow <iframe> for legitimate video embeds only:
@@ -18,6 +19,21 @@ DOMPurify.addHook('uponSanitizeElement', (node, data) => {
   }
 });
 
+// Media the browser fetches by itself as soon as the article shows: kept only
+// when it's on another site, so a feed can't make the reader's browser send
+// a request with their session to the app (SEC-022). data: images make no
+// request and stay.
+const MEDIA = new Set(['IMG', 'SOURCE', 'VIDEO', 'AUDIO', 'TRACK', 'INPUT']);
+function dropOwnSiteMedia(node) {
+  if (!MEDIA.has(node.tagName)) return;
+  const origin = globalThis.location?.origin;
+  for (const attr of ['src', 'poster']) {
+    const value = node.getAttribute(attr);
+    if (value !== null && !/^data:image\//i.test(value.trim()) && !foreignImageUrl(value, origin)) node.removeAttribute(attr);
+  }
+  if (node.hasAttribute('srcset') && !foreignSrcset(node.getAttribute('srcset'), origin)) node.removeAttribute('srcset');
+}
+
 // Runs after attribute sanitization, so the forced values survive and override
 // anything the feed set: iframes get a fixed sandbox; links open in a new tab,
 // so following one never navigates the app itself away. Links and images get
@@ -32,6 +48,7 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
     node.setAttribute('rel', 'noopener noreferrer');
     nameEmptyLink(node);
   }
+  dropOwnSiteMedia(node);
   if (node.tagName === 'IMG') giveAlt(node);
   if (node.tagName === 'PRE') node.setAttribute('tabindex', '0');
 });

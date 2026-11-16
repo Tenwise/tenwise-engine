@@ -20,8 +20,10 @@ import readerRouter from './routes/reader.js';
 import settingsRouter from './routes/settings.js';
 import faviconRouter from './routes/favicon.js';
 import refreshRouter from './routes/refresh.js';
+import pagesRouter from './routes/pages.js';
+import notesExportRouter from './routes/notesExport.js';
 import { startAutoRefresh } from './refresh/autoRefresh.js';
-import { loadPlugins, pluginPublicOrigin, pluginRoutes, setPlugins } from './plugins.js';
+import { loadPlugins, ollamaEnabled, pluginPublicOrigin, pluginRoutes, setPlugins } from './plugins.js';
 
 // Features added by plugins (server/plugins.js); none unless TENWISE_SERVER_PLUGINS names a list.
 setPlugins(await loadPlugins(process.env.TENWISE_SERVER_PLUGINS));
@@ -76,20 +78,33 @@ app.use((req, res, next) => { req.body ??= {}; next(); });
 app.use('/api/feeds', feedsRouter);
 app.use('/api/discover', discoverRouter);
 app.use('/api/articles', articlesRouter);
-app.use('/api/ai', aiRouter);
 app.use('/api/summaries', summariesRouter);
 app.use('/api/highlights', highlightsRouter);
 app.use('/api/collections', collectionsRouter);
-app.use('/api/ollama', ollamaRouter);
+// The Ollama engine, unless a plugin leaves it out (server/plugins.js). Then
+// nothing asks Ollama or runs a command: the model list is empty, the status
+// is a fixed "not installed" (with no memory figure), and the rest is a JSON 404.
+if (ollamaEnabled()) {
+  app.use('/api/ai', aiRouter);
+  app.use('/api/ollama', ollamaRouter);
+} else {
+  app.get('/api/ai/models', (req, res) => res.json({ models: [], ollamaAvailable: false }));
+  app.get('/api/ollama/status', (req, res) => res.json({ installed: false, running: false, models: [], memoryGB: null }));
+  app.use(['/api/ai', '/api/ollama'], (req, res) => res.status(404).json({ error: 'Ollama is not part of this app' }));
+}
 app.use('/api/reader', readerRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/favicon', faviconRouter);
 app.use('/api/refresh', refreshRouter);
+app.use('/api/pages', pagesRouter);
+app.use('/api/export', notesExportRouter);
 for (const [path, router] of pluginRoutes({ db, localOrigin, publicOrigin: PUBLIC_ORIGIN, port: PORT })) app.use(path, router);
 
-// Health check
+// Health check, with the engine's version from package.json: what is running,
+// which can be older than the checkout until it restarts (docs/RUN-LOCALLY.md).
+const { version: ENGINE_VERSION } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', version: ENGINE_VERSION, timestamp: new Date().toISOString() });
 });
 
 // The built frontend (see BUILT above), or a page naming the address to open.

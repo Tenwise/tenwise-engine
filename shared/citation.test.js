@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  apaCitation, apaReferences, arxivId, citationHtml, citationMarkdown, citationText,
+  apaCitation, apaReferences, arxivId, asPublished, citationHtml, citationMarkdown, citationText,
   referencesHtml, referencesMarkdown, referencesText, siteName,
 } from './citation.js';
 
@@ -158,4 +158,23 @@ test('apaReferences sorts a reference list alphabetically, ignoring a leading "T
   assert.equal(referencesText(list).split('\n\n').length, 3);
   assert.match(referencesMarkdown(list), /\*TechCrunch\*\. https:\S+\n\nThe middle story\./);
   assert.match(referencesHtml(list), /^<p style="margin:0 0 0 0.5in;text-indent:-0.5in">Able, A\./);
+});
+
+// A Google News search feed's item (BRF-23): the link is Google's redirect,
+// the title ends with " - Publisher", and <source> names the publisher.
+const GOOGLE_NEWS_ITEM = {
+  title: 'Q3 2026 Climate Tech Report - PitchBook',
+  link: 'https://news.google.com/rss/articles/CBMiExample?oc=5',
+  siteName: '"climate tech" - Google News',
+  siteUrl: 'https://news.google.com',
+  publishedAt: '2026-11-05T10:00:00Z',
+  sourceTitle: 'PitchBook',
+};
+
+test('an item that names its publication is cited as it, not as Google News (BRF-23)', () => {
+  assert.equal(citationText(apaCitation(GOOGLE_NEWS_ITEM)), 'Q3 2026 Climate Tech Report. (2026, November 5). PitchBook. https://news.google.com/rss/articles/CBMiExample?oc=5');
+  const resolved = { ...GOOGLE_NEWS_ITEM, resolvedLink: 'https://pitchbook.com/news/reports/q3-2026-climate-tech-report' };
+  assert.equal(citationText(apaCitation(resolved)), 'Q3 2026 Climate Tech Report. (2026, November 5). PitchBook. https://pitchbook.com/news/reports/q3-2026-climate-tech-report');
+  assert.equal(citationText(apaCitation({ ...GOOGLE_NEWS_ITEM, title: 'A title - with a dash' })), 'A title - with a dash. (2026, November 5). PitchBook. https://news.google.com/rss/articles/CBMiExample?oc=5', 'only the publisher\'s name comes off');
+  assert.equal(asPublished({ title: 'T', link: 'https://e.com/a' }).link, 'https://e.com/a', 'an ordinary item is unchanged');
 });

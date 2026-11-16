@@ -9,6 +9,7 @@ const parser = new RSSParser({
       ['media:thumbnail', 'mediaThumbnail'],
       ['content:encoded', 'contentEncoded'],
       ['dc:creator', 'dcCreator'],
+      ['source', 'source'], // the publication the item comes from: Google News names the publisher (BRF-23)
     ],
   },
 });

@@ -1,6 +1,5 @@
 import { cn } from '@/lib/utils';
-import { POPULAR_FEEDS } from '../../utils/constants.js';
-import { categoriesFor, getDomain } from './catalog.js';
+import { categoriesFor, getDomain, useCatalog } from './catalog.js';
 import { FeedAddButton } from './FeedAddButton.jsx';
 import { FeedRow } from './parts.jsx';
 
@@ -19,15 +18,16 @@ function CategoryPill({ active, onClick, children }) {
 
 /** Popular tab: curated feeds by category. */
 export function PopularTab({ category, onCategoryChange, adder }) {
+  const catalog = useCatalog();
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-1.5">
         <CategoryPill active={category === 'all'} onClick={() => onCategoryChange('all')}>All</CategoryPill>
-        {POPULAR_FEEDS.map((cat) => (
+        {catalog.map((cat) => (
           <CategoryPill key={cat.category} active={category === cat.category} onClick={() => onCategoryChange(cat.category)}>{cat.emoji} {cat.category}</CategoryPill>
         ))}
       </div>
-      {categoriesFor(category).map((cat) => (
+      {categoriesFor(category, catalog).map((cat) => (
         <section key={cat.category}>
           <h3 className="m-0 flex items-baseline gap-2 text-[14px] font-semibold text-foreground">
             {cat.emoji} {cat.category}

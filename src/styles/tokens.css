@@ -50,6 +50,7 @@
   /* Text on a danger-colored background (destructive buttons). */
   --danger-foreground: #121315;
   --warning: #f0b455;
+  --success: #5cc98a;
   --info: #6ca6d9;
 
   --border: #26282c;
@@ -133,6 +134,9 @@
   --danger: #b2302a;
   --danger-muted: rgba(178, 48, 42, 0.12);
   --danger-foreground: #ffffff;
+  /* Status text that reads on a light background (4.5:1 or more, UX-6). */
+  --warning: #8a5300;
+  --success: #116b35;
 
   --border: #e2e0db;
   --border-light: #ecebe7;

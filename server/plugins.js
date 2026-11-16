@@ -12,6 +12,9 @@
 //   publicOrigin         the one public address a hosted install is served
 //                        from ("https://app.example.com"), behind a proxy that
 //                        signs people in. The engine alone is local only.
+//   ollama               false to leave out the Ollama engine: its routes
+//                        aren't mounted, for an install with no Ollama beside
+//                        it (the hosted app's containers).
 import { isAbsolute, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -54,3 +57,6 @@ export function pluginFeedTitle(feedUrl) {
 
 /** The public origin a plugin names (unchecked), or ''. */
 export const pluginPublicOrigin = () => active.find((plugin) => plugin.publicOrigin)?.publicOrigin ?? '';
+
+/** Whether the Ollama engine's routes are mounted: yes, unless a plugin sets `ollama: false`. */
+export const ollamaEnabled = () => !active.some((plugin) => plugin.ollama === false);

@@ -22,6 +22,7 @@ export function normalizeItem(item) {
     content: firstOf(itemHtml(item), item.summary),
     summary: firstOf(item.contentSnippet, item.summary),
     author: firstOf(item.dcCreator, item.creator, item.author),
+    sourceTitle: typeof item.source === 'string' ? item.source.trim() : '',
     publishedAt: firstOf(item.isoDate, item.pubDate) || new Date().toISOString(),
     guid: firstOf(item.guid, item.id, item.link),
     imageUrl: extractImageUrl(item),

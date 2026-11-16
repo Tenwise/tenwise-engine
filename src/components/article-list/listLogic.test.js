@@ -101,9 +101,9 @@ test('collections have their own title, empty state and save-date headings', () 
   assert.equal(groupingFor('collection'), BY_SAVED);
 });
 
-test('Unsorted is a list of saves with its own title and empty state', () => {
+test('To file (was Unsorted) is a list of saves with its own title and empty state', () => {
   assert.equal(isSaveList('unsorted'), true);
   assert.equal(isSaveList('today'), false);
-  assert.equal(viewTitle({ type: 'unsorted' }), 'Unsorted saves');
-  assert.equal(emptyStateText({ viewType: 'unsorted' }).title, 'All sorted');
+  assert.equal(viewTitle({ type: 'unsorted' }), 'To file');
+  assert.equal(emptyStateText({ viewType: 'unsorted' }).title, 'All filed');
 });

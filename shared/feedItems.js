@@ -48,7 +48,7 @@ export function canonicalizeUrl(url) {
 }
 
 // Optional text fields of a feed item, stored as '' when missing.
-const OPTIONAL_ITEM_FIELDS = ['content', 'summary', 'author', 'imageUrl'];
+const OPTIONAL_ITEM_FIELDS = ['content', 'summary', 'author', 'imageUrl', 'sourceTitle'];
 
 /** Same as `a || b || …`: the first truthy value, else the last value. */
 export function firstOf(...values) {

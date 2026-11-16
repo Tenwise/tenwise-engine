@@ -2,7 +2,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -80,6 +80,7 @@ test('it says where it listens, and answers health checks', async () => {
   const health = await request('/api/health');
   assert.equal(health.status, 200);
   assert.equal(health.body.status, 'ok');
+  assert.equal(health.body.version, JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version);
   assert.ok(!Number.isNaN(Date.parse(health.body.timestamp)));
 });
 
@@ -170,6 +171,35 @@ test('a public origin is accepted only when a hosting plugin names it', { timeou
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('access-control-allow-origin'), PUBLIC);
     assert.equal((await request('/api/health', { at: hosted.port, headers: { Origin: 'https://evil.example' } })).status, 403);
+  } finally {
+    await stop(hosted.server);
+  }
+});
+
+test('the plain engine mounts the Ollama routes', async () => {
+  const chat = await postJson('/api/ai/chat', '{}');
+  assert.equal(chat.status, 400, 'reaches the chat route, which checks its body');
+  const pull = await postJson('/api/ollama/pull', '{}');
+  assert.deepEqual([pull.status, pull.body], [400, { error: 'model is required' }], 'reaches the pull route, which checks its body');
+});
+
+test('a plugin with ollama: false leaves the Ollama engine out', { timeout: 30_000 }, async () => {
+  const plugins = join(dataDir, 'no-ollama-plugins.js');
+  writeFileSync(plugins, "export default [{ id: 'hosting', ollama: false }];");
+  const hosted = { port: await freePort() };
+  // An Ollama address nothing answers on: the empty list must not come from asking it.
+  hosted.server = startServer(hosted.port, { TENWISE_SERVER_PLUGINS: plugins, OLLAMA_HOST: 'http://127.0.0.1:9' });
+  await hosted.server.ready;
+  try {
+    const models = await request('/api/ai/models', { at: hosted.port });
+    assert.deepEqual(models.body, { models: [], ollamaAvailable: false });
+    const status = await request('/api/ollama/status', { at: hosted.port });
+    assert.deepEqual(status.body, { installed: false, running: false, models: [], memoryGB: null });
+    for (const path of ['/api/ai/chat', '/api/ollama/start', '/api/ollama/pull']) {
+      const res = await request(path, { at: hosted.port, method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      assert.equal(res.status, 404, path);
+      assert.equal(res.body.error, 'Ollama is not part of this app');
+    }
   } finally {
     await stop(hosted.server);
   }

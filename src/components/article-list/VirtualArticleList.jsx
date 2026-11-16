@@ -9,19 +9,17 @@ const GRID_COLUMNS = 3;
 const ROW = 'absolute top-0 left-0 w-full';
 // First-guess heights in px (a day heading adds `header`); items are then
 // measured as they render.
-const ESTIMATES = { header: 30, rows: 58, magazine: 292, excerpt: 96, compact: 37 };
+const ESTIMATES = { header: 30, rows: 64, compact: 32, magazine: 292 };
 // Load the next page when the rendered items come within this many of the end.
 const END_MARGIN = 15;
 
 // The virtualized items for a view mode. Rows: one article each, under day
 // headings unless the list is ranked by relevance, not date. Grid: rows of
-// three cards. List and Compact: one card each. position: the index of the
-// item's (first) article in the list.
+// three cards. position: the index of the item's (first) article in the list.
 function listItems(articles, viewMode, ranked, grouping) {
-  if (viewMode === 'rows' && ranked) return articles.map((article, position) => ({ type: 'article', key: article.id, article, position }));
-  if (viewMode === 'rows') return withDayHeaders(articles, new Date(), grouping);
-  const columns = viewMode === 'magazine' ? GRID_COLUMNS : 1;
-  return chunkRows(articles, columns).map((cards, row) => ({ type: 'cards', key: cards[0].id, articles: cards, position: row * columns }));
+  if (viewMode !== 'magazine' && ranked) return articles.map((article, position) => ({ type: 'article', key: article.id, article, position }));
+  if (viewMode !== 'magazine') return withDayHeaders(articles, new Date(), grouping);
+  return chunkRows(articles, GRID_COLUMNS).map((cards, row) => ({ type: 'cards', key: cards[0].id, articles: cards, position: row * GRID_COLUMNS }));
 }
 
 // Index of the item that shows each article, for scrolling to it.
@@ -68,8 +66,8 @@ function ListItem({ position, setSize, children }) {
   return <div role="listitem" aria-posinset={position + 1} aria-setsize={setSize}>{children}</div>;
 }
 
-function ItemContent({ item, viewMode, setSize, props }) {
-  const { feedMap, selectedArticleId, selection, onSelectArticle } = props;
+function ItemContent({ item, setSize, props }) {
+  const { feedMap, selectedArticleId, selection, onSelectArticle, viewMode } = props;
   if (item.type === 'article') {
     const { article } = item;
     return (
@@ -82,6 +80,7 @@ function ItemContent({ item, viewMode, setSize, props }) {
           selected={selection.has(article.id)}
           onOpen={() => onSelectArticle(article)}
           onToggle={() => selection.toggle(article.id)}
+          compact={viewMode === 'compact'}
         />
       </ListItem>
     );
@@ -89,7 +88,6 @@ function ItemContent({ item, viewMode, setSize, props }) {
   return item.articles.map((article, i) => (
     <ListItem key={article.id} position={item.position + i} setSize={setSize}>
       <ArticleCard
-        viewMode={viewMode}
         article={article}
         feed={feedMap[article.feedId]}
         active={selectedArticleId === article.id}
@@ -105,7 +103,7 @@ function ItemContent({ item, viewMode, setSize, props }) {
  * The articles, rendered only near the visible part of `scrollRef`; calls
  * onEndReached as the reader nears the end, to load the next page.
  * Rows (default) shows day headings and dense two-line rows; Grid lays out
- * rows of three cards; List and Compact one card per row. A list named
+ * rows of three cards; Compact one line per article (UX-12). A list named
  * `label`, of `total` articles (loaded or not).
  */
 export function VirtualArticleList({ scrollRef, articles, total = 0, label, viewMode, ranked, grouping, onEndReached, ...props }) {
@@ -118,7 +116,7 @@ export function VirtualArticleList({ scrollRef, articles, total = 0, label, view
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => (ESTIMATES[viewMode] ?? ESTIMATES.excerpt) + (items[index].heading ? ESTIMATES.header : 0),
+    estimateSize: (index) => (ESTIMATES[viewMode] ?? ESTIMATES.rows) + (items[index].heading ? ESTIMATES.header : 0),
     getItemKey: (index) => items[index].key,
     overscan: 8,
     scrollMargin,
@@ -137,10 +135,10 @@ export function VirtualArticleList({ scrollRef, articles, total = 0, label, view
             key={virtualItem.key}
             data-index={virtualItem.index}
             ref={virtualizer.measureElement}
-            className={item.type === 'cards' && viewMode === 'magazine' ? `${ROW} grid auto-rows-[280px] grid-cols-3 gap-3 pb-3` : ROW}
+            className={item.type === 'cards' ? `${ROW} grid auto-rows-[280px] grid-cols-3 gap-3 pb-3` : ROW}
             style={{ transform: `translateY(${virtualItem.start - scrollMargin}px)` }}
           >
-            <ItemContent item={item} viewMode={viewMode} setSize={setSize} props={props} />
+            <ItemContent item={item} setSize={setSize} props={{ ...props, viewMode }} />
           </div>
         );
       })}

@@ -5,6 +5,8 @@ import { useLibrary } from '../../app/LibraryContext.jsx';
 import { useConfirmAction } from '../../hooks/useConfirmAction.js';
 import { settingsPath } from '../../settings/sync.js';
 import { generateOPML, parseOPML } from '../../utils/opml.js';
+import { getNotesExportURL } from '../../utils/api.js';
+import { downloadUrl } from '../../utils/download.js';
 import { useSettingsEnv } from './env.js';
 import { importResultMessage } from './settingsModel.js';
 
@@ -23,6 +25,16 @@ export function ExportOPMLControl() {
     <Button variant="outline" size="sm" onClick={() => download(generateOPML(feeds, folders), 'tenwise-feeds.opml', 'text/xml')}>
       <HiOutlineArrowDownTray /> Export OPML
     </Button>
+  );
+}
+
+// Your saves with your notes and highlights (PR-14), as Markdown or HTML.
+export function ExportNotesControl() {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button variant="outline" size="sm" onClick={() => downloadUrl(getNotesExportURL('md'))}><HiOutlineArrowDownTray /> Markdown</Button>
+      <Button variant="outline" size="sm" onClick={() => downloadUrl(getNotesExportURL('html'))}><HiOutlineArrowDownTray /> HTML</Button>
+    </div>
   );
 }
 

@@ -19,6 +19,10 @@ const getAll = db.prepare(`
   SELECT * FROM summaries ORDER BY created_at DESC
 `);
 
+const getForArticle = db.prepare(`
+  SELECT * FROM summaries WHERE article_url = ? ORDER BY created_at DESC
+`);
+
 const getById = db.prepare(`
   SELECT * FROM summaries WHERE id = ?
 `);
@@ -35,7 +39,15 @@ const OPTIONAL_FIELDS = [
 
 const personasColumn = (personas) => (Array.isArray(personas) ? JSON.stringify(personas) : personas || null);
 
+// The same summary of the same article is kept once (AI-7).
+const findSame = db.prepare(`
+  SELECT * FROM summaries WHERE summary_text = ? AND COALESCE(article_url, '') = COALESCE(?, '') ORDER BY id LIMIT 1
+`);
+
+/** Saves a summary; one already saved with the same text for the same article is returned instead. */
 export function saveSummary(data) {
+  const same = findSame.get(data.summary_text, data.article_url || null);
+  if (same) return same;
   const row = Object.fromEntries(OPTIONAL_FIELDS.map((key) => [key, data[key] || null]));
   const info = insert.run({
     ...row,
@@ -48,6 +60,11 @@ export function saveSummary(data) {
 
 export function getAllSummaries() {
   return getAll.all();
+}
+
+/** The summaries saved for one article, newest first (AI-14). */
+export function getSummariesForArticle(url) {
+  return getForArticle.all(url);
 }
 
 export function removeSummary(id) {

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { saveSummary, getAllSummaries, removeSummary, buildCSV, DB_PATH } from '../db/summaries.js';
+import { saveSummary, getAllSummaries, getSummariesForArticle, removeSummary, buildCSV, DB_PATH } from '../db/summaries.js';
 
 const router = Router();
 
@@ -17,10 +17,11 @@ router.post('/', (req, res) => {
   }
 });
 
-/** GET /api/summaries — return all summaries, newest first */
+/** GET /api/summaries — return all summaries, newest first; ?article_url= only that article's */
 router.get('/', (req, res) => {
+  const { article_url: url } = req.query;
   try {
-    res.json(getAllSummaries());
+    res.json(typeof url === 'string' && url ? getSummariesForArticle(url) : getAllSummaries());
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

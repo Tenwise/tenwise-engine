@@ -2,6 +2,9 @@ import { db } from './database.js';
 import { FROM_ACTIVE_FEED, LIST_COLUMNS, searchArticleBodies, toListItem } from './reader.js';
 import { FILTER_KEYS, applyFilters, availableFilters } from '../../shared/aiFilters.js';
 import { rankArticles, tokenizeQuery } from '../../shared/search.js';
+import { alertOf, muteCondition, parseRules, RULES_KEY } from '../../shared/rules.js';
+import { readSettings } from '../settings.js';
+import { parseFilters, parseRule, ruleCondition, RULE_FILTERS_KEY } from '../../shared/ruleFilters.js';
 
 // The article list, one page at a time: the view, narrowed by search and the
 // AI filters, with the counts and filter values the list header needs.
@@ -15,9 +18,42 @@ const startOfToday = () => {
   return start.toISOString();
 };
 
-// SQL condition (and its parameters) for the articles in a view.
-function viewWhere(view, id) {
+// The reader's mute and alert rules (shared/rules.js), from the settings file.
+export const currentRules = () => parseRules(readSettings()[RULES_KEY]);
+
+// Saves are the reader's own choice, so the save lists keep muted articles;
+// every reading view (All, Today, a feed, a folder) hides them.
+const SAVE_VIEWS = new Set(['saved', 'unsorted', 'collection']);
+
+/**
+ * SQL condition (and its parameters) for the articles in a view, without
+ * muted ones. `author` narrows a feed to one author's articles (a newsletter
+ * sender in the inbox feed); other views ignore it.
+ */
+export function viewWhere(view, id, rules = currentRules(), author = '') {
+  const where = byAuthor(baseWhere(view, id), view, author);
+  const mute = SAVE_VIEWS.has(view) ? null : muteCondition(rules);
+  return mute ? { sql: `${where.sql} AND ${mute.sql}`, params: [...where.params, ...mute.params] } : where;
+}
+
+// A saved rule filter (PR-13): its rule as SQL, in its folder if it has one,
+// from subscribed feeds; nothing when the filter is gone.
+function filterWhere(id) {
+  const filter = parseFilters(readSettings()[RULE_FILTERS_KEY]).find((f) => f.id === id);
+  const { tree } = filter ? parseRule(filter.rule) : {};
+  if (!tree) return { sql: '0', params: [] };
+  const rule = ruleCondition(tree, filter.scope);
+  const folder = filter.folderId ? ' AND feed_id IN (SELECT id FROM feeds WHERE folder_id = ?)' : '';
+  return { sql: `${rule.sql}${folder} AND ${FROM_ACTIVE_FEED}`, params: [...rule.params, ...(filter.folderId ? [filter.folderId] : [])] };
+}
+
+const byAuthor = (where, view, author) => (view === 'feed' && author
+  ? { sql: `${where.sql} AND author = ?`, params: [...where.params, author] }
+  : where);
+
+function baseWhere(view, id) {
   switch (view) {
+    case 'filter': return filterWhere(id);
     case 'feed': return { sql: 'feed_id = ?', params: [id] };
     case 'folder': return { sql: 'feed_id IN (SELECT id FROM feeds WHERE folder_id = ?)', params: [id] };
     case 'saved': return { sql: 'is_bookmarked = 1', params: [] };
@@ -32,10 +68,15 @@ function viewWhere(view, id) {
 // One aiAnalysis value; NULL (never an error) when the JSON is malformed.
 const analysisField = (key) => `(CASE WHEN json_valid(ai_analysis) THEN json_extract(ai_analysis, '$.${key}') END)`;
 
-// The view's condition plus the AI-only toggle and the active filters.
-function filteredWhere(where, { filters, aiOnly }) {
+// Read state (PR-12): 'unread', 'read', or anything else for both.
+export const READ_FILTERS = { unread: 'is_read = 0', read: 'is_read = 1' };
+const readMatches = (read) => (a) => (read === 'unread' ? !a.isRead : read === 'read' ? Boolean(a.isRead) : true);
+
+// The view's condition plus the read state, the AI-only toggle and the active filters.
+function filteredWhere(where, { filters, aiOnly, read }) {
   const parts = [where.sql];
   const params = [...where.params];
+  if (READ_FILTERS[read]) parts.push(READ_FILTERS[read]);
   if (aiOnly) parts.push("ai_status = 'done'");
   for (const key of FILTER_KEYS) {
     if (!filters[key]) continue;
@@ -75,7 +116,7 @@ function searchPage(where, tokens, options) {
   const { tokens: bodyTokens, matches } = searchArticleBodies(options.q);
   const bodyMatches = new Map(bodyTokens.map((term, i) => [term, new Set(matches[i])]));
   const ranked = rankArticles(candidates, tokens, { sourceOf: (a) => feedTitles.get(a.feedId), bodyMatches });
-  const filtered = applyFilters(ranked, { activeFilters: options.filters, aiOnly: options.aiOnly });
+  const filtered = applyFilters(ranked, { activeFilters: options.filters, aiOnly: options.aiOnly }).filter(readMatches(options.read));
   return {
     articles: filtered.slice(options.offset, options.offset + options.limit),
     total: filtered.length,
@@ -87,17 +128,26 @@ const clamp = (n, min, max, fallback) => (Number.isInteger(n) ? Math.min(Math.ma
 
 /**
  * One page of a view's articles. options: { q, filters: { sentiment, … },
- * aiOnly, offset, limit }. Returns { articles, total, unread, facets,
+ * aiOnly, read ('unread' | 'read'), after (an ISO time), offset, limit }. Returns { articles, total, unread, facets,
  * nextOffset } where total counts every match, unread counts the view's
  * unread articles, and nextOffset is null on the last page.
  */
+// Only articles that arrived after a time (GRO-22, "Read what's new"): an ISO time, else none.
+export function afterWhere(where, after) {
+  const t = typeof after === 'string' ? Date.parse(after) : NaN;
+  return Number.isFinite(t) ? { sql: `${where.sql} AND created_at > ?`, params: [...where.params, new Date(t).toISOString()] } : where;
+}
+
 export function getArticlePage(view, id, options = {}) {
-  const where = viewWhere(view, id);
+  const rules = currentRules();
+  const viewOnly = viewWhere(view, id, rules, options.author);
+  const where = afterWhere(viewOnly, options.after);
   const opts = {
     view,
     q: options.q || '',
     filters: options.filters || {},
     aiOnly: Boolean(options.aiOnly),
+    read: READ_FILTERS[options.read] ? options.read : '',
     offset: clamp(options.offset, 0, Number.MAX_SAFE_INTEGER, 0),
     limit: clamp(options.limit, 1, MAX_PAGE_SIZE, DEFAULT_PAGE_SIZE),
   };
@@ -105,16 +155,33 @@ export function getArticlePage(view, id, options = {}) {
   const page = tokens.length ? searchPage(where, tokens, opts) : browsePage(where, opts);
   const end = opts.offset + page.articles.length;
   return {
-    articles: page.articles,
+    // An alert word in the title or excerpt marks the article (PR-5).
+    articles: page.articles.map((a) => { const alert = alertOf(a, rules); return alert ? { ...a, alert } : a; }),
     total: page.total,
-    unread: count({ sql: `${where.sql} AND is_read = 0`, params: where.params }),
+    unread: count({ sql: `${viewOnly.sql} AND is_read = 0`, params: viewOnly.params }),
     facets: facetsToArrays(page.facets),
     nextOffset: end < page.total ? end : null,
   };
 }
 
-/** Marks every unread article in a view read; returns how many changed. */
-export function markViewRead(view, id) {
-  const where = viewWhere(view, id);
+export const MAX_AUTHORS = 100;
+
+/**
+ * A feed's authors, latest first: [{ author, total, unread }], counting what
+ * its list shows (muted articles left out). The newsletter senders in the
+ * sidebar come from the inbox feed's.
+ */
+export function feedAuthors(feedId) {
+  const where = viewWhere('feed', feedId);
+  return db.prepare(
+    `SELECT author, COUNT(*) AS total, SUM(is_read = 0) AS unread FROM articles
+     WHERE ${where.sql} AND author IS NOT NULL AND author <> ''
+     GROUP BY author ORDER BY MAX(published_at) DESC LIMIT ?`
+  ).all(...where.params, MAX_AUTHORS);
+}
+
+/** Marks every unread article in a view (of one author, for a feed) read; returns how many changed. */
+export function markViewRead(view, id, author = '') {
+  const where = viewWhere(view, id, currentRules(), author);
   return db.prepare(`UPDATE articles SET is_read = 1 WHERE ${where.sql} AND is_read = 0`).run(...where.params).changes;
 }

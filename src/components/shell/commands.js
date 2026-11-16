@@ -1,5 +1,5 @@
 import {
-  HiOutlineArrowPath, HiOutlineCog6Tooth, HiOutlineFolder, HiOutlineListBullet,
+  HiOutlineArrowPath, HiOutlineCog6Tooth, HiOutlineFolder, HiOutlineLink, HiOutlineListBullet,
   HiOutlinePlus, HiOutlineRss, HiOutlineSparkles, HiOutlineSun, HiOutlineViewColumns,
 } from 'react-icons/hi2';
 import { VIEW_MODES } from '../article-list/viewModes.js';
@@ -17,6 +17,7 @@ function goTo({ folders, feeds }, go) {
 function actions(a) {
   return [
     { id: 'add-feed', label: 'Add feed', Icon: HiOutlinePlus, run: a.addFeed },
+    { id: 'save-page', label: 'Save a page from a link', Icon: HiOutlineLink, run: a.savePage },
     { id: 'refresh', label: 'Refresh all feeds', Icon: HiOutlineArrowPath, run: a.refreshAll },
     { id: 'settings', label: 'Open settings', Icon: HiOutlineCog6Tooth, run: a.openSettings },
     { id: 'theme', label: 'Toggle light / dark theme', Icon: HiOutlineSun, run: a.toggleTheme },

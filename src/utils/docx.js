@@ -51,9 +51,12 @@ function downloadBlob(blob, filename, extension) {
   saveBlob(blob, filename.replace(/[^a-z0-9\-_]/gi, '_').toLowerCase() + extension);
 }
 
+/** The docx library's exports, loaded on first use, for builders that lay out their own document. */
+export const loadDocx = () => import('docx');
+
 /** A Word document (Blob) from markdown; loads the docx library on first use. */
 export async function markdownToDocxBlob(markdownText) {
-  const D = await import('docx');
+  const D = await loadDocx();
   const doc = new D.Document({
     numbering: {
       config: [{ reference: 'default', levels: [{ level: 0, format: 'decimal', text: '%1.', alignment: D.AlignmentType.LEFT }] }],

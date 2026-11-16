@@ -1,5 +1,13 @@
 import { Router } from 'express';
 import { discoverFeeds } from '../utils/feedDiscovery.js';
+import { getFeedByUrl } from '../db/reader.js';
+
+// A feed already followed at any of its addresses is listed at that address,
+// marked `followed`, so Add feeds shows it as added (PR-23).
+export function withFollowed({ urls, ...feed }) {
+  const followed = urls.find((url) => getFeedByUrl(url));
+  return { ...feed, url: followed ?? feed.url, followed: Boolean(followed) };
+}
 
 const router = Router();
 
@@ -17,7 +25,7 @@ router.post('/', async (req, res) => {
 
   try {
     const feeds = await discoverFeeds(url);
-    res.json({ feeds });
+    res.json({ feeds: feeds.map(withFollowed) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

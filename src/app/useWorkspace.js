@@ -47,8 +47,9 @@ export function useSummaryCount(viewType) {
 /**
  * Moving between the library screens and the reader: openFromLibrary(article)
  * reads it in All Articles; selectInView(id) selects an item in the open
- * screen. The 'open-view' event ({ type, id }) opens a view at an item, for
- * example a plugin's after it saves one.
+ * screen. The 'open-view' event ({ type, id, since? }) opens a view at an item, for
+ * example a plugin's after it saves one; `since` shows only what arrived after
+ * that time (GRO-22).
  */
 export function useLibraryNavigation(activeView, setActiveView, setSelectedArticle) {
   const openFromLibrary = useCallback((article) => {
@@ -56,6 +57,6 @@ export function useLibraryNavigation(activeView, setActiveView, setSelectedArtic
     setSelectedArticle(article);
   }, [setActiveView, setSelectedArticle]);
   const selectInView = useCallback((id) => setActiveView({ type: activeView.type, id }), [activeView.type, setActiveView]);
-  useEffect(() => on('open-view', ({ type, id }) => setActiveView({ type, id })), [setActiveView]);
+  useEffect(() => on('open-view', ({ type, id, since }) => setActiveView(since ? { type, id, since } : { type, id })), [setActiveView]);
   return { openFromLibrary, selectInView };
 }

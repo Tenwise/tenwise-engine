@@ -5,10 +5,11 @@ import { IconButton } from '@/components/ui/icon-button';
 import { emit } from '../../lib/appEvents.js';
 import Logotype from '../shell/Logotype.jsx';
 import { CollectionList } from './CollectionList.jsx';
+import { FilterList } from './FilterList.jsx';
 import { ContextMenu } from './ContextMenu.jsx';
 import { FolderTree } from './FolderTree.jsx';
 import { InlineInput, NavRow } from './NavRow.jsx';
-import { isActive, NAV_ITEMS } from './sidebarModel.js';
+import { isActive, menuOpener, NAV_ITEMS, SIDEBAR_SECTIONS } from './sidebarModel.js';
 
 function NewFolderInput({ onAdd, onCancel }) {
   const [name, setName] = useState('');
@@ -89,11 +90,12 @@ function useFolderTreeState(actions) {
   };
 }
 
-/** Full sidebar: header, the ⌘K bar and Add Feed, navigation, collections, folders and feeds. */
+/** Full sidebar: header, the ⌘K bar and Add Feed, navigation, collections, plugins' sections, filters, folders and feeds. */
 export function ExpandedSidebar({ style, activeView, onViewChange, counts, folders, feeds, grouped, actions }) {
   const [addingFolder, setAddingFolder] = useState(false);
   const tree = { ...useFolderTreeState(actions), activeView, onViewChange };
   const addFolder = (name) => { actions.onAddFolder(name); setAddingFolder(false); };
+  const feedMenu = (id) => menuOpener(tree.openMenu, 'feed', id);
 
   return (
     <aside aria-label="Feeds" className="sidebar-panel flex h-screen shrink-0 flex-col overflow-hidden bg-[var(--bg-secondary)]" style={style}>
@@ -102,6 +104,8 @@ export function ExpandedSidebar({ style, activeView, onViewChange, counts, folde
       <nav className="min-h-0 flex-1 overflow-y-auto px-2 pt-1.5 pb-4">
         <MainNav activeView={activeView} onViewChange={onViewChange} counts={counts} />
         <CollectionList activeView={activeView} onViewChange={onViewChange} unsorted={counts.unsorted} />
+        {SIDEBAR_SECTIONS.map(({ id, Section }) => <Section key={id} activeView={activeView} onViewChange={onViewChange} feeds={feeds} counts={counts} feedMenu={feedMenu} />)}
+        <FilterList activeView={activeView} onViewChange={onViewChange} />
         <div className="mt-4">
           <div className="flex items-center justify-between px-2.5 pb-1">
             <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Folders</span>

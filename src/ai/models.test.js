@@ -49,3 +49,32 @@ test('withoutThinking drops <think> blocks, including tags split across chunks',
   assert.equal(await collect(['Before ', '<think>x</think>', 'after']), 'Before after');
   assert.equal(await collect(['<think>never closed']), '');
 });
+
+test('Auto picks a model a plugin engine marks preferred, such as the person’s own key', () => {
+  const models = [
+    { name: 'gemini-nano', availability: 'available' },
+    { name: 'own-key/claude-opus-5-5', preferred: true },
+    { name: 'llama3:8b' },
+  ];
+  assert.equal(pickDefaultModel(models), 'own-key/claude-opus-5-5');
+});
+
+test('autoLabel and modelLabel say what Auto uses, by name people know (AI-5)', async () => {
+  const { autoLabel, modelLabel } = await import('./models.js');
+  const nano = { name: 'gemini-nano', availability: 'available' };
+  const tenwise = { name: 'tenwise-ai', label: 'Tenwise AI', preferred: true };
+  assert.equal(autoLabel([nano, tenwise]), 'Auto (now: Tenwise AI)');
+  assert.equal(autoLabel([nano]), 'Auto (now: Gemini Nano)');
+  assert.equal(autoLabel([]), 'Auto');
+  assert.equal(modelLabel({ name: 'llama3:8b' }), 'llama3:8b');
+});
+
+test('engineLabel names the engine that wrote a draft (AI-9)', async () => {
+  const { engineLabel } = await import('./models.js');
+  assert.equal(engineLabel('tenwise-ai'), 'Tenwise AI');
+  assert.equal(engineLabel('own-key/claude-opus-5-5'), 'claude-opus-5-5 · your key');
+  assert.equal(engineLabel('gemini-nano'), 'Gemini Nano');
+  assert.equal(engineLabel('llama3:8b'), 'llama3');
+  assert.equal(engineLabel('x', [{ name: 'x', label: 'Shown' }]), 'Shown');
+  assert.equal(engineLabel(null), '');
+});

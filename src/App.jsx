@@ -16,6 +16,8 @@ import { useSettingsModal } from './app/useSettingsModal.js';
 import { useCommandPalette } from './app/useCommandPalette.js';
 import { usePaletteCommands } from './app/usePaletteCommands.js';
 import { useArticleNavigation, useLibraryNavigation, useSummaryCount } from './app/useWorkspace.js';
+import { articleIdFrom, pageToSaveFrom, withoutArticle, withoutParam } from './app/deepLink.js';
+import { fetchArticle } from './utils/api.js';
 import { useAvailableModels } from './hooks/useAvailableModels.js';
 import { pluginsOf } from './plugins/index.js';
 
@@ -23,6 +25,7 @@ import { pluginsOf } from './plugins/index.js';
 // small (the list, the reader and the AI rail are in it).
 const AddFeedDialog = lazy(() => import('./components/add-feed/AddFeedDialog.jsx'));
 const CollectionPicker = lazy(() => import('./components/library/CollectionPicker.jsx'));
+const SavePageDialog = lazy(() => import('./components/library/SavePageDialog.jsx'));
 const CommandPalette = lazy(() => import('./components/shell/CommandPalette.jsx'));
 const HighlightsScreen = lazy(() => import('./components/library/HighlightsScreen.jsx'));
 const SettingsScreen = lazy(() => import('./components/settings/SettingsScreen.jsx'));
@@ -91,6 +94,20 @@ function useCollectionPicker() {
   return { open: articleIds !== null, articleIds, close };
 }
 
+// Save a page (BRF-08): opened by the 'open-save-page' event ({ url?,
+// collectionId? }) or by a link to `/?save=<address>`, the bookmarklet's.
+function SavePageHost() {
+  const [start, setStart] = useState(() => {
+    const url = pageToSaveFrom(window.location.search);
+    return url ? { url } : null;
+  });
+  useEffect(() => on('open-save-page', (detail) => setStart(detail ?? {})), []);
+  useEffect(() => {
+    if (pageToSaveFrom(window.location.search)) window.history.replaceState(null, '', withoutParam(window.location.href, 'save'));
+  }, []);
+  return <OnceOpened open={Boolean(start)}>{start && <SavePageDialog start={start} onClose={() => setStart(null)} />}</OnceOpened>;
+}
+
 function CollectionPickerHost({ picker }) {
   return (
     <OnceOpened open={picker.open}>
@@ -104,11 +121,14 @@ function CollectionPickerHost({ picker }) {
 // shortcuts pause while one is).
 function useOverlays(paletteOpen) {
   const [modal, setModal] = useState(null); // 'addFeed' | 'settings' | null
-  const closeModal = useCallback(() => setModal(null), []);
+  const [addFeedTab, setAddFeedTab] = useState(null);
+  const closeModal = useCallback(() => { setModal(null); setAddFeedTab(null); }, []);
+  // Add Feed from anywhere, such as a plugin's getting-started list; { tab } opens that tab.
+  useEffect(() => on('open-add-feed', (detail) => { setAddFeedTab(detail?.tab ?? null); setModal('addFeed'); }), []);
   const settingsSection = useSettingsModal(setModal);
   const picker = useCollectionPicker();
   const anyOpen = [modal !== null, paletteOpen, picker.open].some(Boolean);
-  return { modal, setModal, closeModal, settingsSection, picker, anyOpen };
+  return { modal, setModal, addFeedTab, closeModal, settingsSection, picker, anyOpen };
 }
 
 function Workspace({ activeView, setActiveView, selectedArticle, setSelectedArticle }) {
@@ -123,9 +143,10 @@ function Workspace({ activeView, setActiveView, selectedArticle, setSelectedArti
   const onLibraryChanged = useCallback(() => { refreshSummaryCount(); library.bumpCounts(); }, [refreshSummaryCount, library]);
   const nav = useArticleNavigation(selectedArticle, setSelectedArticle, visibleArticles);
   const [paletteOpen, setPaletteOpen] = useCommandPalette();
-  const { modal, setModal, closeModal, settingsSection, picker, anyOpen: overlayOpen } = useOverlays(paletteOpen);
+  const { modal, setModal, addFeedTab, closeModal, settingsSection, picker, anyOpen: overlayOpen } = useOverlays(paletteOpen);
   usePaneKeyboard({ isModalOpen: overlayOpen, toggleSidebar: layout.toggleSidebarMode, toggleList: layout.toggleList });
-  const goToView = useCallback((view) => { setActiveView(view); setSelectedArticle(null); }, [setActiveView, setSelectedArticle]);
+  const { closeSidebarOnPhone } = layout;
+  const goToView = useCallback((view) => { setActiveView(view); setSelectedArticle(null); closeSidebarOnPhone(); }, [setActiveView, setSelectedArticle, closeSidebarOnPhone]);
 
   const closeReader = useCallback(() => setSelectedArticle(null), [setSelectedArticle]);
   const { openFromLibrary, selectInView } = useLibraryNavigation(activeView, setActiveView, setSelectedArticle);
@@ -141,6 +162,8 @@ function Workspace({ activeView, setActiveView, selectedArticle, setSelectedArti
         librarySummaryCount={summaryCount}
         style={{ width: layout.effectiveSidebarWidth, minWidth: layout.effectiveSidebarWidth }}
       />
+      {/* On a phone the open sidebar is a drawer: tapping beside it closes it (base.css shows this only there). */}
+      {layout.sidebarMode === 'expanded' && <button type="button" className="sidebar-backdrop" aria-label="Close the sidebar" onClick={layout.toggleSidebarMode} />}
       <MainArea
         edge={layout.sidebarMode === 'expanded' && <ResizableHandle onResize={layout.resizeSidebar} />}
         library={LibraryScreen && <LibraryScreen onOpenArticle={openFromLibrary} onChanged={onLibraryChanged} selectedId={activeView.id} onSelect={selectInView} />}
@@ -173,7 +196,8 @@ function Workspace({ activeView, setActiveView, selectedArticle, setSelectedArti
         commands={{ goToView, setModal, layout, readerOpen: Boolean(selectedArticle) }}
       /></OnceOpened>
       <CollectionPickerHost picker={picker} />
-      <OnceOpened open={modal === 'addFeed'}><AddFeedDialog isOpen={modal === 'addFeed'} onClose={closeModal} /></OnceOpened>
+      <SavePageHost />
+      <OnceOpened open={modal === 'addFeed'}><AddFeedDialog isOpen={modal === 'addFeed'} tab={addFeedTab} onClose={closeModal} /></OnceOpened>
       <OnceOpened open={modal === 'settings'}>
         <SettingsScreen key={settingsSection ?? 'start'} section={settingsSection} isOpen={modal === 'settings'} onClose={closeModal} availableModels={availableModels} />
       </OnceOpened>
@@ -188,9 +212,20 @@ const PluginProviders = ({ children }) => PLUGIN_PROVIDERS.reduceRight((inner, {
 
 // View and selection state lives above the library provider so that deleting
 // the current feed or folder can return the app to All Articles.
+// Opens the article a link names (`/?article=<id>`, src/app/deepLink.js), once.
+function useArticleLink(setSelectedArticle) {
+  useEffect(() => {
+    const id = articleIdFrom(window.location.search);
+    if (!id) return;
+    window.history.replaceState(null, '', withoutArticle(window.location.href));
+    fetchArticle(id).then(setSelectedArticle).catch(() => {});
+  }, [setSelectedArticle]);
+}
+
 function AppShell() {
   const [activeView, setActiveView] = useState({ type: 'all' });
   const [selectedArticle, setSelectedArticle] = useState(null);
+  useArticleLink(setSelectedArticle);
   // (type, id) leaves that feed or folder view; (null) leaves any of them.
   const onViewRemoved = useCallback((type, id) => {
     setActiveView((view) => (type === null || (view.type === type && view.id === id) ? { type: 'all' } : view));

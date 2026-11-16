@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getFeed, listFeeds } from '../db/reader.js';
-import { refreshFeed, refreshFeeds } from '../refresh/feedRefresh.js';
+import { getFeed } from '../db/reader.js';
+import { refreshFeed } from '../refresh/feedRefresh.js';
 import { refresher } from '../refresh/autoRefresh.js';
 import { feedIdsFrom } from './refreshInput.js';
 
@@ -12,16 +12,19 @@ router.get('/', (req, res) => {
 });
 
 /**
- * POST /api/refresh { feedIds? } → { inserted, failed: [feed titles] }
- * Without feedIds every feed is refreshed, joining a scheduled run that is
- * under way; with them (new feeds from an OPML import), just those.
+ * POST /api/refresh { feedIds? }. Without feedIds every feed is refreshed,
+ * joining a scheduled run that is under way → { inserted, failed: [feed titles] }.
+ * With them (new feeds from an OPML import or the welcome) → 202 { started, feeds }
+ * at once: fetching a hundred feeds takes minutes, longer than a request should
+ * wait (OPS-19). The run goes through the refresher, so GET shows its progress
+ * and the app reloads when it finishes.
  */
 router.post('/', async (req, res) => {
   try {
     const ids = feedIdsFrom(req.body);
     if (!ids) return res.json(await refresher.runAll());
-    const wanted = new Set(ids);
-    return res.json(await refreshFeeds(listFeeds().filter((f) => wanted.has(f.id))));
+    refresher.runFeeds(ids).catch((err) => console.error('Refreshing new feeds failed:', err));
+    return res.status(202).json({ started: true, feeds: ids.length });
   } catch (err) {
     return res.status(err.status || 500).json({ error: err.message });
   }

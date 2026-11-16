@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchArticlePage } from '../../utils/api.js';
-import { flattenPages, patchPages } from './listLogic.js';
+import { flattenPages } from './listLogic.js';
+import { patchCachedLists } from './listCache.js';
 
 export const ARTICLES_KEY = 'articles';
 const PAGE_SIZE = 150;
@@ -27,17 +28,17 @@ function useRefetchOnRefresh(refreshKey, queryClient) {
 
 /**
  * The active view's articles, a page at a time, narrowed on the server by
- * the search query and AI filters ({ q, filters, aiOnly }). Also returns the
+ * the search query, AI filters and read state ({ q, filters, aiOnly, read }). Also returns the
  * view's counts and filter values, and calls to patch cached rows in place,
  * refetch, and load the next page.
  */
-export function useArticleListData(activeView, refreshKey, feeds, { q, filters, aiOnly }) {
+export function useArticleListData(activeView, refreshKey, feeds, { q, filters, aiOnly, read }) {
   const queryClient = useQueryClient();
-  const viewKey = `${activeView.type}:${activeView.id}`;
+  const viewKey = `${activeView.type}:${activeView.id}${activeView.author ? `:${activeView.author}` : ''}`;
   const query = useInfiniteQuery({
-    queryKey: [ARTICLES_KEY, viewKey, { q, filters, aiOnly }],
+    queryKey: [ARTICLES_KEY, viewKey, { q, filters, aiOnly, read, after: activeView.since }],
     queryFn: ({ pageParam }) => fetchArticlePage(activeView.type, activeView.id, {
-      q, filters, aiOnly, offset: pageParam, limit: PAGE_SIZE,
+      q, filters, aiOnly, read, after: activeView.since, author: activeView.author, offset: pageParam, limit: PAGE_SIZE,
     }),
     initialPageParam: 0,
     getNextPageParam: (last) => last.nextOffset ?? undefined,
@@ -51,11 +52,9 @@ export function useArticleListData(activeView, refreshKey, feeds, { q, filters, 
   const facets = useMemo(() => toSets(first?.facets), [first]);
   const feedMap = useMemo(() => Object.fromEntries(feeds.map((f) => [f.id, f])), [feeds]);
 
-  // Optimistic update of several articles in every cached list (and its unread count).
-  const updateLocal = useCallback((ids, changes) => {
-    const idSet = new Set(ids);
-    queryClient.setQueriesData({ queryKey: [ARTICLES_KEY] }, (data) => patchPages(data, idSet, changes));
-  }, [queryClient]);
+  // Optimistic update of several articles in every cached list (and its
+  // unread count), without making an out-of-date list look fresh (PR-21).
+  const updateLocal = useCallback((ids, changes) => patchCachedLists(queryClient, [ARTICLES_KEY], ids, changes), [queryClient]);
 
   const reload = useCallback(() => queryClient.invalidateQueries({ queryKey: [ARTICLES_KEY] }), [queryClient]);
 

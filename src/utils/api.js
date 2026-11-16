@@ -1,6 +1,7 @@
 import { getNanoModel, isNanoModel, streamNanoChat } from './chromeAI.js';
 import { serverStatus } from '../app/serverStatus.js';
 import { withoutThinking } from '../ai/thinking.js';
+import { capability, pluginsOf } from '../plugins/index.js';
 
 const API_BASE = '/api';
 export const UNREACHABLE = "Can't reach the Tenwise server";
@@ -88,6 +89,11 @@ export async function fetchSummaries() {
   return request('/summaries', 'Failed to fetch summaries');
 }
 
+/** The summaries saved for one article (AI-14). */
+export async function fetchArticleSummaries(url) {
+  return request(`/summaries?article_url=${encodeURIComponent(url)}`, 'Failed to fetch summaries');
+}
+
 export async function deleteSummary(id) {
   return request(`/summaries/${id}`, 'Failed to delete summary', { method: 'DELETE' });
 }
@@ -122,6 +128,20 @@ export async function removeFromCollection(id, articleIds) {
 }
 /** URL of a collection's articles as one Markdown file (downloads; for NotebookLM). */
 export function getCollectionExportURL(id) { return `${API_BASE}/collections/${id}/export.md`; }
+
+/** The collection's Markdown file: { blob, filename, linkOnly } with how many articles went in as link only (PR-16). */
+export async function fetchCollectionMarkdown(id) {
+  const res = await send(`/collections/${id}/export.md`, 'Failed to export the collection');
+  const filename = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '')?.[1] || 'collection.md';
+  return { blob: await res.blob(), filename, linkOnly: Number(res.headers.get('x-tenwise-link-only')) || 0 };
+}
+
+/** " 2 articles went in as link only: …", or '' when none did (PR-16). */
+export const linkOnlyNote = (n) => (n > 0 ? ` ${n} article${n === 1 ? '' : 's'} went in as link only: the text couldn't be fetched.` : '');
+/** Your saves (or one collection) with your notes and highlights, as 'md' or 'html' (PR-14). */
+export function getNotesExportURL(format, collectionId) {
+  return `${API_BASE}/export/notes.${format}${collectionId ? `?collection=${collectionId}` : ''}`;
+}
 
 // ── Highlights ───────────────────────────────────────────────────────────────
 
@@ -195,6 +215,9 @@ export async function refreshFeedNow(id) {
   return request(`/refresh/feeds/${id}`, 'Failed to refresh feed', { method: 'POST' });
 }
 /** Refreshes every feed, or only `feedIds`: { inserted, failed: [feed titles] }. */
+// Every feed: waits for the run → { inserted, failed }. Some feeds (just
+// added): the server starts fetching them and answers at once → { started,
+// feeds }; GET /api/refresh shows the run and its progress.
 export async function refreshFeeds(feedIds) {
   return request('/refresh', 'Failed to refresh feeds', json(feedIds ? { feedIds } : {}));
 }
@@ -204,21 +227,29 @@ export async function fetchRefreshStatus() { return request('/refresh', 'Failed 
 // Articles
 /**
  * One page of a view's articles: { articles, total, unread, facets, nextOffset }.
- * options: { q, filters: { sentiment, … }, aiOnly, offset, limit }.
+ * options: { q, filters: { sentiment, … }, aiOnly, offset, limit, author (a feed's, to narrow it) }.
  */
-export async function fetchArticlePage(view = 'all', id, { q, filters = {}, aiOnly, offset = 0, limit } = {}) {
-  const fields = { view, id, offset, q, aiOnly: aiOnly ? '1' : '', limit, ...filters };
+export async function fetchArticlePage(view = 'all', id, { q, filters = {}, aiOnly, read, after, author, offset = 0, limit } = {}) {
+  const fields = { view, id, author, offset, q, aiOnly: aiOnly ? '1' : '', read, after, limit, ...filters };
   const set = Object.entries(fields).filter(([, value]) => value !== undefined && value !== null && value !== '');
   return readerFetch(`/articles/page?${new URLSearchParams(set.map(([k, v]) => [k, String(v)]))}`);
 }
-export async function markViewRead(view, id) {
-  return readerFetch('/articles/mark-view-read', json({ view, id }));
+export async function markViewRead(view, id, author) {
+  return readerFetch('/articles/mark-view-read', json({ view, id, author }));
 }
+/** A feed's authors, latest first: [{ author, total, unread }]. */
+export async function fetchFeedAuthors(feedId) { return readerFetch(`/feeds/${feedId}/authors`); }
 export async function fetchArticle(id) { return readerFetch(`/articles/${id}`); }
+/** The article's picture: its own, else its page's preview image (UX-8) → { imageUrl } (null when none). */
+export async function fetchArticleImage(id) { return readerFetch(`/articles/${id}/image`); }
 
 // List items omit article bodies; load full articles for any that lack one.
 export async function withFullContent(articles) {
   return Promise.all(articles.map((a) => ('content' in a ? a : fetchArticle(a.id).catch(() => a))));
+}
+/** Saves a page from a link (BRF-08): { article, duplicate }. */
+export async function savePage({ url, note, collectionId }) {
+  return request('/pages', "Couldn't save the page", json({ url, note, collectionId }));
 }
 export async function fetchArticleByLink(url) {
   return readerFetch(`/articles/by-link?url=${encodeURIComponent(url)}`);
@@ -253,6 +284,7 @@ export async function clearAllData() { return readerFetch('/all', { method: 'DEL
 // Installed Ollama models, or null when the server is unreachable.
 // (Ollama itself being absent is a normal empty list.)
 async function fetchOllamaModels() {
+  if (!capability('ollama')) return [];
   try {
     const res = await fetch(`${API_BASE}/ai/models`);
     return res.ok ? (await res.json()).models || [] : null;
@@ -261,23 +293,37 @@ async function fetchOllamaModels() {
   }
 }
 
+// Models from the engines plugins add (src/plugins: aiEngines); an engine
+// that fails to answer offers none this time.
+async function fetchPluginModels() {
+  const lists = await Promise.all(pluginsOf('aiEngines').map((engine) => engine.models().catch(() => [])));
+  return lists.flat();
+}
+
 export async function fetchAIModels() {
-  const [ollamaModels, nano] = await Promise.all([fetchOllamaModels(), getNanoModel()]);
-  if (!ollamaModels && !nano) throw new Error('Could not reach the server');
-  // Gemini Nano first: it's the default engine; Ollama models are optional extras.
-  const models = nano ? [nano, ...(ollamaModels || [])] : ollamaModels;
-  return { models }; // { models: [{name, family, parameterSize, size}] }
+  const [ollamaModels, nano, pluginModels] = await Promise.all([fetchOllamaModels(), getNanoModel(), fetchPluginModels()]);
+  if (!ollamaModels && !nano && pluginModels.length === 0) throw new Error('Could not reach the server');
+  // Gemini Nano first: it's the default engine; plugin engines and Ollama
+  // models are extras (a plugin may mark one `preferred` for Auto).
+  const models = [...(nano ? [nano] : []), ...pluginModels, ...(ollamaModels || [])];
+  return { models }; // { models: [{name, family, parameterSize, size, label?, preferred?}] }
 }
 
 /**
- * Streams a chat completion from Gemini Nano in the browser when that model
- * is selected, otherwise from Ollama via the local proxy.
+ * Streams a chat completion from the plugin engine that handles the model,
+ * else from Gemini Nano in the browser when that model is selected,
+ * otherwise from Ollama via the local proxy.
  * Yields string tokens as they arrive.
  * @param {string} model
  * @param {{role:string, content:string}[]} messages
+ * @param {AbortSignal} [signal]
+ * @param {{purpose?: 'summary'|'chat'|'brief'|'check'}} [options] what the
+ *   answer is for; a plugin engine may use it (a model or a length per purpose)
  * @returns {AsyncGenerator<string>}
  */
-export function streamChat(model, messages, signal) {
+export function streamChat(model, messages, signal, options = {}) {
+  const engine = pluginsOf('aiEngines').find((e) => e.handles(model));
+  if (engine) return engine.streamChat(model, messages, signal, options);
   return isNanoModel(model) ? streamNanoChat(messages, signal) : streamOllamaChat(model, messages, signal);
 }
 

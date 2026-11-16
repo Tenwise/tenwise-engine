@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { on } from '../lib/appEvents.js';
 import * as api from '../utils/api.js';
 
 export function useFolders() {
@@ -6,6 +7,8 @@ export function useFolders() {
 
   const reloadFolders = useCallback(() => api.fetchFolders().then(setFolders).catch(() => {}), []);
   useEffect(() => { reloadFolders(); }, [reloadFolders]);
+  // Feeds added through the API may come in a new folder (useFeeds listens too).
+  useEffect(() => on('feeds-changed', reloadFolders), [reloadFolders]);
 
   const addFolder = useCallback(async (name) => {
     const maxOrder = folders.length > 0 ? Math.max(...folders.map(f => f.order || 0)) : 0;

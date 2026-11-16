@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import { decodeBody, readCapped } from './fetchText.js';
 import { safeFetch } from './urlGuard.js';
 
 // Site icons are fetched by this server and cached in reader.db, so
@@ -6,6 +7,8 @@ import { safeFetch } from './urlGuard.js';
 // which sites the user follows.
 
 const MAX_ICON_BYTES = 512 * 1024;
+// A site's home page, read only for its <link rel=icon> tags.
+const MAX_PAGE_BYTES = 2 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 8000;
 // "No icon" results are retried after a day, in case the failure was temporary.
 const MISS_TTL_MS = 24 * 60 * 60 * 1000;
@@ -56,8 +59,8 @@ async function fetchIcon(url) {
   if (url.startsWith('data:')) return null;
   const res = await get(url);
   if (!isImageResponse(res)) return null;
-  const body = Buffer.from(await res.arrayBuffer());
-  return isAcceptableSize(body) ? { type: mimeType(res), body } : null;
+  const body = await readCapped(res, MAX_ICON_BYTES).catch(() => null);
+  return body && isAcceptableSize(body) ? { type: mimeType(res), body } : null;
 }
 
 async function candidateUrls(host) {
@@ -65,7 +68,9 @@ async function candidateUrls(host) {
   const fallback = new URL('/favicon.ico', origin).href;
   const res = await get(origin).catch(() => null);
   if (!res?.ok) return [fallback];
-  return [...iconLinksInHtml(await res.text(), res.url || origin), fallback];
+  const page = await readCapped(res, MAX_PAGE_BYTES).catch(() => null);
+  if (!page) return [fallback];
+  return [...iconLinksInHtml(decodeBody(page, res.headers.get('content-type')), res.url || origin), fallback];
 }
 
 async function resolveIcon(host) {

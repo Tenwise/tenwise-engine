@@ -19,7 +19,7 @@ export default function ReaderPlaceholder({ width, onResize }) {
   return (
     <aside
       aria-label="Reader"
-      className="article-reader-panel visible relative flex flex-col items-center justify-center gap-6 px-10 text-center"
+      className="reader-placeholder article-reader-panel visible relative flex flex-col items-center justify-center gap-6 px-10 text-center"
       style={{ width: `${width}px` }}
     >
       <ResizableHandle overlay onResize={onResize} />

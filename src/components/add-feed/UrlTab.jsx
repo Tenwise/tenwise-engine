@@ -26,7 +26,7 @@ function DiscoveredFeeds({ feeds, adder, onPreview }) {
     <div>
       <div className="mb-1 font-mono text-[11px] uppercase tracking-wider text-[var(--text-tertiary)]">Found {feeds.length} feed{feeds.length > 1 ? 's' : ''}</div>
       {feeds.map((feed) => (
-        <FeedRow key={feed.url} title={feed.title || 'RSS feed'} meta={feed.url}>
+        <FeedRow key={feed.url} title={feed.title || 'RSS feed'} meta={feed.followed ? `${feed.url} · you follow this` : feed.url} dim={adder.isAdded(feed.url)}>
           <Button variant="outline" size="sm" onClick={() => onPreview(feed.url)}>Preview</Button>
           <FeedAddButton url={feed.url} adder={adder} />
         </FeedRow>

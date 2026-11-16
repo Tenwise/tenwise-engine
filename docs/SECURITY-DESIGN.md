@@ -22,7 +22,7 @@ The engine runs on the user's own machine, for one user:
 
 - **A React app** in the browser, served from a local origin (`http://localhost:5173` in development, or the server's own address with `npm start`).
 - **An Express server** bound to `127.0.0.1`. It fetches feeds and pages for the app, owns the SQLite database in `data/`, and bridges to Ollama.
-- **An AI engine.** Gemini Nano runs inside Chrome. Ollama, if used, is a separate program the user runs, reached through the server at the address in `OLLAMA_HOST` (default `http://127.0.0.1:11434`).
+- **An AI engine.** Gemini Nano runs inside Chrome. Ollama, if used, is a separate program the user runs, reached through the server at the address in `OLLAMA_HOST` (default `http://127.0.0.1:11434`). A plugin may add an engine (the `aiEngines` slot, `src/plugins/index.js`); a plain build has none, and `streamChat()` sends a plugin engine only the model names it claims.
 
 ```
    Internet: publishers' feeds,                  Other websites open
@@ -43,7 +43,7 @@ The engine runs on the user's own machine, for one user:
 
 The trust boundaries B1–B6 are described [below](#trust-boundaries).
 
-**Plugins.** An app built on the engine can add features through plugin slots: `src/plugins/index.js` in the browser, and `server/plugins.js` on the server, loaded from the module `TENWISE_SERVER_PLUGINS` names. A plain engine loads none. A plugin runs with the engine's own privileges, so whoever builds such an app owns its security. Each slot is a fixed list of contributions: routes, a rewrite of the URL to extract, a feed title, and at most one public origin (see [Served beyond this machine](#served-beyond-this-machine-b2)). A plugin's fetches should go through `safeFetch` like the engine's.
+**Plugins.** An app built on the engine can add features through plugin slots: `src/plugins/index.js` in the browser, and `server/plugins.js` on the server, loaded from the module `TENWISE_SERVER_PLUGINS` names. A plain engine loads none. A plugin runs with the engine's own privileges, so whoever builds such an app owns its security. Each slot is a fixed list of contributions: routes, a rewrite of the URL to extract, a feed title, at most one public origin, and leaving out the Ollama bridge (`ollama: false`, see [B4](#command-injection-and-the-ollama-bridge-b4)) (see [Served beyond this machine](#served-beyond-this-machine-b2)). A plugin's fetches should go through `safeFetch` like the engine's. A browser plugin may also turn off an engine behaviour through the `capabilities` slot; every capability is on in a plain build. `seedSettingsFromBrowser` off means a new `settings.json` is never filled from this browser's storage, and the browser mirrors the file instead, for an app where one browser may serve more than one person.
 
 ## Threat model
 
@@ -85,21 +85,29 @@ The trust boundaries B1–B6 are described [below](#trust-boundaries).
 
 ### Hostile HTML in articles and feeds (B3)
 
-- **Sanitized with DOMPurify** before insertion: `sanitizeArticleHtml` for extracted articles and `sanitizeFeedHtml` for the feed preview ([src/components/reader/sanitize.js](../src/components/reader/sanitize.js)). DOMPurify removes script, event handlers and `javascript:` URLs.
+- **Sanitized with DOMPurify** before insertion: `sanitizeArticleHtml` for extracted articles and `sanitizeFeedHtml` for the feed preview ([src/components/reader/sanitize.js](../src/components/reader/sanitize.js)). DOMPurify removes script, event handlers and `javascript:` URLs. Both are tested in a real DOM (jsdom) against 30 known XSS payloads, from `<script>` and `onerror` to mutation XSS through `<math>`, `<noscript>` and SVG: no script, event handler, script URL, form, inline style or off-list iframe survives ([sanitize.dom.test.js](../src/components/reader/sanitize.dom.test.js), SEC-28).
+- **No media from the app's own site** (SEC-022). An image a feed or article page points at the app (a relative path, the app's host, or a parent or sub-domain of it) would be a request carrying the reader's session, made just by showing the article. The sanitizer drops such `src`, `srcset` and `poster` values from images, `<source>`, video and audio, and article cards show a picture only when `foreignImageUrl` passes it ([src/utils/imageUrl.js](../src/utils/imageUrl.js), tested). `data:` images make no request and stay. The one exception is a host a plugin names in the `imageHosts` slot, matched exactly (not its subdomains, never the app's own host): the hosted image proxy, which serves only signed images and gets no session cookie (the platform's security design, Newsletter images).
 - **No fake controls.** `form`, `input`, `button`, `select`, `option`, `textarea` and `style` elements are removed, and so are `style`, `action` and `formaction` attributes. A feed cannot draw a "sign in again" form or a full-window overlay.
 - **Video embeds only from an allowlist.** An `iframe` stays only if its host is YouTube, youtube-nocookie, Vimeo's player or SoundCloud's widget, and every kept iframe gets a fixed `sandbox` that overrides whatever the feed set. The host list is [shared/embedHosts.js](../shared/embedHosts.js), which the CSP's `frame-src` uses too.
 - **A Content-Security-Policy behind the sanitizer.** The built app (`npm start` and the background service) is served with a policy that runs scripts only from the app itself, plus the inline theme script in `index.html`, allowed by its hash. It also loads no plugins (`object-src 'none'`), takes frames only from the embed hosts, and makes network requests only to its own server (`connect-src 'self'`). A script that got past DOMPurify would not run. Styles allow `'unsafe-inline'`, because Radix dialogs inject a `<style>` element, and the sanitizer already strips style attributes from article HTML. Images and media may load from any http(s) host, as articles need ([server/utils/securityHeaders.js](../server/utils/securityHeaders.js)).
 - **Links can't navigate the app.** Every link gets `target="_blank"` and `rel="noopener noreferrer"`.
 - **AI output is text.** The AI rail shows summaries and chat as React text, never as HTML.
 - **Citations are text.** An APA citation is built from a feed's author, title and link, and the app shows it as React text. The copy that goes to the clipboard as rich text (`text/html`, for word processors) escapes `&`, `<`, `>` and `"` in every part, so a feed can't put markup into a document the user pastes it into ([shared/citation.js](../shared/citation.js), tested).
+- **Exports escape everything.** The notes export (`GET /api/export/notes.html`, [server/db/notesExport.js](../server/db/notesExport.js), PR-14) writes titles, sources, notes and highlights into an HTML file with every value escaped, and links only `http(s)` addresses. It is sent as an attachment with `Content-Security-Policy: default-src 'none'`, so even opened in the browser it runs nothing. The Markdown export is `text/markdown`, also an attachment.
 
 ### Server-side request forgery (B1)
 
-`safeFetch` in [server/utils/urlGuard.js](../server/utils/urlGuard.js) is the only path for server-side fetches of untrusted URLs: feeds (`feedParser.js`), feed discovery (`feedDiscovery.js`), full-text extraction (`articleExtractor.js`) and site icons (`favicon.js`), mostly through `fetchText.js`. It makes three checks:
+`safeFetch` in [server/utils/urlGuard.js](../server/utils/urlGuard.js) is the only path for server-side fetches of untrusted URLs: feeds (`feedParser.js`), feed discovery (`feedDiscovery.js`), full-text extraction (`articleExtractor.js`), an article's preview image (`pageImage.js`) and site icons (`favicon.js`), mostly through `fetchText.js`. It makes three checks:
 
 1. **Before the request:** the URL must be `http:` or `https:`, and every address its host resolves to must be public. The blocked ranges are listed in `BLOCKED_V4`, `V6_WITH_V4` and `BLOCKED_V6`: loopback, private, carrier-grade NAT, link-local (including `169.254.169.254`, the cloud metadata address), multicast and reserved. IPv6 addresses are read as numbers, so every spelling of an address is judged alike. An IPv6 address that carries an IPv4 one (IPv4-mapped `::ffff:0:0/96`, IPv4-compatible `::/96`, NAT64 `64:ff9b::/96`, 6to4 `2002::/16`) is judged by that IPv4 address, and any other IPv6 address outside global unicast (`2000::/3`) is refused, as are Teredo and documentation ranges. An IP address written in the URL involves no DNS, so this is the only check it meets. Anything not recognized as an IP address is refused.
 2. **At connect time:** the connection resolves the hostname again through `guardedLookup`, which refuses blocked addresses. A DNS server that answers "public" for the first check and "127.0.0.1" for the connection (DNS rebinding) is caught here.
 3. **On every redirect:** redirects are followed by hand (`redirect: 'manual'`, at most 5), and each target is checked again before it is requested.
+
+An article's preview image (`GET /api/reader/articles/:id/image`, [utils/pageImage.js](../server/utils/pageImage.js), UX-8) fetches only the article's own stored link, never an address from the request, through `fetchText` (at most 2 MB, 8 seconds). It reads only `og:image` and `twitter:image` meta tags from the page's `<head>` and keeps an absolute `http(s)` address; anything else (`javascript:`, `data:`) is dropped. The address is stored in `image_url` only when the article has none, and the browser shows it as an `<img>`, which the app's `img-src` already allows. A page with no image isn't asked again for six hours (kept in memory, at most 5,000).
+
+Saving a page from a link (`POST /api/pages`, [routes/pages.js](../server/routes/pages.js)) adds no fetch path: it takes only `http(s)` addresses up to 2,048 characters and reads the page through the same extraction, so `safeFetch` guards it like any article. A page already in the library (by its link or canonical link) isn't fetched again. Saved pages live in a local feed (`tenwise:saved-pages`) that refresh never fetches and OPML export leaves out.
+
+A collection's Markdown export (`GET /api/collections/:id/export.md`, [db/collectionExport.js](../server/db/collectionExport.js), PR-16) adds no fetch path either: for an article whose stored text is a stub, it reads the article's own link through the same extraction, at most 12 pages per export and 4 at a time, so `safeFetch` guards it and one export can't fan out.
 
 The favicon route accepts only a plain DNS name (`isValidHostname`: no IP addresses, ports, paths or credentials) and builds the URL itself. A plugin that rewrites the URL to extract (`resolveArticleUrl`) gets the engine's `fetchPage`, which goes through `safeFetch`, and the URL it returns is fetched through `safeFetch` too.
 
@@ -130,6 +138,7 @@ Tests: [server/index.test.js](../server/index.test.js) checks that `PUBLIC_ORIGI
 - All queries use better-sqlite3 prepared statements with bound parameters (`?` or `@name`). User values never become part of the SQL text.
 - Where SQL is assembled, every piece comes from code, never from a request: column names from the fixed `ARTICLE_FIELDS` table ([server/db/reader.js](../server/db/reader.js)), filter keys from `FILTER_KEYS` ([shared/aiFilters.js](../shared/aiFilters.js)), view conditions from a `switch` ([server/db/articlePages.js](../server/db/articlePages.js)), and placeholder lists generated from an array's length.
 - Full-text search terms are quoted for FTS5 (quotes doubled) and passed as a bound parameter to `MATCH`, at most 10 terms per query.
+- Rule filters (PR-13, [shared/ruleFilters.js](../shared/ruleFilters.js)) are parsed into a tree (words, phrases, AND, OR, NOT, brackets; at most 300 characters, 20 words, 8 levels deep) before anything reaches SQL. A word must pass `cleanWord` (letters, digits, spaces, hyphens, apostrophes, at most 60 characters), so it can't carry GLOB or FTS5 syntax. `ruleCondition` builds the SQL from fixed fragments (`AND`, `OR`, `NOT`, brackets, one title `GLOB ?` and one `articles_fts MATCH ?` per word), with every word a bound parameter. The rule is read from the server's own settings file by filter id; a request names only the id.
 
 Tests: `server/db/*.test.js`, including [search.test.js](../server/db/search.test.js).
 
@@ -139,6 +148,7 @@ Tests: `server/db/*.test.js`, including [search.test.js](../server/db/search.tes
 - The model name in a model download (`/api/ollama/pull`) goes to Ollama's HTTP API as a JSON field, not to a command line.
 - `OLLAMA_HOST` is read once, from the environment, at startup ([server/utils/ollamaHost.js](../server/utils/ollamaHost.js)). No request can change where the bridge connects.
 - `/api/ollama/start` and `/api/ollama/pull` are rate limited to 20 requests a minute.
+- **The bridge can be left out.** A server plugin that sets `ollama: false` ([server/plugins.js](../server/plugins.js)) removes B4: `/api/ai` and `/api/ollama` aren't mounted. In their place the model list is empty, the status is a fixed "not installed" with no memory figure, and every other path is a JSON 404, so nothing connects to Ollama or runs a command. A plain engine keeps the bridge.
 
 ### Prompt injection
 
@@ -146,7 +156,7 @@ An article can contain text written to steer the model. The AI has no tools: it 
 
 ### Resource exhaustion
 
-- Fetched documents: 15-second timeout and 15 MB cap ([server/utils/fetchText.js](../server/utils/fetchText.js)). Icons: 8 seconds and 512 KB.
+- Fetched documents: 15-second timeout and 15 MB cap ([server/utils/fetchText.js](../server/utils/fetchText.js)). The body is read as a stream and dropped as soon as it passes the cap, counted after decompression, so a small compressed response can't expand into memory first, whatever its Content-Length says (`readCapped`, tested with a gzip body). Icons: 8 seconds and 512 KB.
 - Request bodies: 2 MB, or 8 MB on the bulk-insert route ([server/index.js](../server/index.js)).
 - Static files are rate limited when the server hosts the built app.
 - Tag stripping runs in one linear pass, so crafted input like `<<<<…` can't cause catastrophic regex backtracking ([server/utils/text.js](../server/utils/text.js), tested in `text.test.js`).

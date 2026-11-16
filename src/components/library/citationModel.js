@@ -11,6 +11,8 @@ export const articleCitationSource = (article, feed) => ({
   link: article.link,
   siteName: feed?.title,
   siteUrl: feed?.siteUrl,
+  sourceTitle: article.sourceTitle,
+  resolvedLink: article.resolvedLink,
 });
 
 /**

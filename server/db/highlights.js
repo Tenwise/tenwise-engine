@@ -11,10 +11,24 @@ const getByUrl = db.prepare(`SELECT * FROM highlights WHERE article_url = ? ORDE
 const getById = db.prepare(`SELECT * FROM highlights WHERE id = ?`);
 const deleteById = db.prepare(`DELETE FROM highlights WHERE id = ?`);
 const countAll = db.prepare(`SELECT COUNT(*) AS count FROM highlights`);
+// Highlighting an article saves it (PR-7): it mattered, so it mustn't be lost
+// under tomorrow's feed. An article already saved keeps its saved time.
+const saveArticle = db.prepare(`UPDATE articles SET is_bookmarked = 1, saved_at = COALESCE(saved_at, @now) WHERE id = @id AND is_bookmarked = 0`);
 
+const articleIdOf = (value) => (Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null);
+
+/**
+ * Stores a highlight; with `article_id`, also saves that article if it isn't
+ * saved. Returns the highlight, with `article_saved` true when it saved one.
+ */
 export function saveHighlight(data) {
+  return db.transaction(() => insertAndSave(data))();
+}
+
+function insertAndSave(data) {
+  const now = new Date().toISOString();
   const info = insert.run({
-    created_at: new Date().toISOString(),
+    created_at: now,
     article_url: data.article_url || null,
     article_title: data.article_title || null,
     article_source: data.article_source || null,
@@ -22,7 +36,9 @@ export function saveHighlight(data) {
     note: data.note || null,
     color: data.color || 'yellow',
   });
-  return getById.get(info.lastInsertRowid);
+  const id = articleIdOf(data.article_id);
+  const saved = id !== null && saveArticle.run({ id, now }).changes > 0;
+  return { ...getById.get(info.lastInsertRowid), article_saved: saved };
 }
 
 export function getAllHighlights() {

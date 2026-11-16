@@ -1,0 +1,1164 @@
+{
+  "defaults": [
+    "technology",
+    "ai"
+  ],
+  "categories": [
+    {
+      "id": "technology",
+      "category": "Technology",
+      "emoji": "💻",
+      "description": "Gadgets, software, and digital innovation",
+      "feeds": [
+        {
+          "title": "Ars Technica",
+          "url": "https://feeds.arstechnica.com/arstechnica/index",
+          "siteUrl": "https://arstechnica.com",
+          "description": "In-depth tech analysis and reviews"
+        },
+        {
+          "title": "The Verge",
+          "url": "https://www.theverge.com/rss/index.xml",
+          "siteUrl": "https://www.theverge.com",
+          "description": "Technology, science, art, and culture"
+        },
+        {
+          "title": "Hacker News",
+          "url": "https://hnrss.org/frontpage",
+          "siteUrl": "https://news.ycombinator.com",
+          "description": "Top stories from the tech community"
+        },
+        {
+          "title": "TechCrunch",
+          "url": "https://techcrunch.com/feed/",
+          "siteUrl": "https://techcrunch.com",
+          "description": "Startup and tech news"
+        },
+        {
+          "title": "Wired",
+          "url": "https://www.wired.com/feed/rss",
+          "siteUrl": "https://www.wired.com",
+          "description": "Future of technology and culture"
+        },
+        {
+          "title": "The Next Web",
+          "url": "https://thenextweb.com/feed",
+          "siteUrl": "https://thenextweb.com",
+          "description": "Tech news and analysis"
+        },
+        {
+          "title": "MIT Technology Review",
+          "url": "https://www.technologyreview.com/topnews.rss",
+          "siteUrl": "https://www.technologyreview.com",
+          "description": "Technology's impact on society"
+        },
+        {
+          "title": "Engadget",
+          "url": "https://www.engadget.com/rss.xml",
+          "siteUrl": "https://www.engadget.com",
+          "description": "Consumer electronics and gadgets"
+        },
+        {
+          "title": "Gizmodo",
+          "url": "https://gizmodo.com/rss",
+          "siteUrl": "https://gizmodo.com",
+          "description": "Technology, science, and gadgets"
+        },
+        {
+          "title": "Platformer",
+          "url": "https://www.platformer.news/rss/",
+          "siteUrl": "https://www.platformer.news",
+          "description": "Big tech and the people who run it"
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "category": "AI & Machine Learning",
+      "emoji": "🤖",
+      "description": "Artificial intelligence breakthroughs and research",
+      "feeds": [
+        {
+          "title": "Simon Willison's Weblog",
+          "url": "https://simonwillison.net/atom/everything/",
+          "siteUrl": "https://simonwillison.net",
+          "description": "Hands-on notes about LLMs and tools"
+        },
+        {
+          "title": "One Useful Thing",
+          "url": "https://www.oneusefulthing.org/feed",
+          "siteUrl": "https://www.oneusefulthing.org",
+          "description": "Ethan Mollick on using AI for work and learning"
+        },
+        {
+          "title": "Import AI",
+          "url": "https://importai.substack.com/feed",
+          "siteUrl": "https://importai.substack.com",
+          "description": "Jack Clark's weekly read of AI research and policy"
+        },
+        {
+          "title": "Latent Space",
+          "url": "https://www.latent.space/feed",
+          "siteUrl": "https://www.latent.space",
+          "description": "Interviews and essays for AI engineers"
+        },
+        {
+          "title": "MIT Technology Review – AI",
+          "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
+          "siteUrl": "https://www.technologyreview.com/topic/artificial-intelligence",
+          "description": "News and analysis on artificial intelligence"
+        },
+        {
+          "title": "OpenAI Blog",
+          "url": "https://openai.com/blog/rss.xml",
+          "siteUrl": "https://openai.com",
+          "description": "Research and announcements from OpenAI"
+        },
+        {
+          "title": "Google AI Blog",
+          "url": "https://blog.google/technology/ai/rss/",
+          "siteUrl": "https://blog.google",
+          "description": "AI research from Google"
+        },
+        {
+          "title": "Hugging Face Blog",
+          "url": "https://huggingface.co/blog/feed.xml",
+          "siteUrl": "https://huggingface.co",
+          "description": "Open-source AI models and tools"
+        },
+        {
+          "title": "DeepMind Blog",
+          "url": "https://deepmind.google/blog/rss.xml",
+          "siteUrl": "https://deepmind.google",
+          "description": "AI safety and research from DeepMind"
+        },
+        {
+          "title": "MIT News – AI",
+          "url": "https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml",
+          "siteUrl": "https://news.mit.edu",
+          "description": "AI research from MIT"
+        },
+        {
+          "title": "Towards AI",
+          "url": "https://pub.towardsai.net/feed",
+          "siteUrl": "https://towardsai.net",
+          "description": "AI research and tutorials"
+        }
+      ]
+    },
+    {
+      "id": "developer",
+      "category": "Developer & Engineering",
+      "emoji": "⚙️",
+      "description": "Software development, architecture, and engineering",
+      "feeds": [
+        {
+          "title": "The Pragmatic Engineer",
+          "url": "https://newsletter.pragmaticengineer.com/feed",
+          "siteUrl": "https://newsletter.pragmaticengineer.com",
+          "description": "How software teams and companies really work"
+        },
+        {
+          "title": "Martin Fowler",
+          "url": "https://martinfowler.com/feed.atom",
+          "siteUrl": "https://martinfowler.com",
+          "description": "Software design and architecture essays"
+        },
+        {
+          "title": "GitHub Blog",
+          "url": "https://github.blog/feed/",
+          "siteUrl": "https://github.blog",
+          "description": "GitHub product and engineering updates"
+        },
+        {
+          "title": "Lobsters",
+          "url": "https://lobste.rs/rss",
+          "siteUrl": "https://lobste.rs",
+          "description": "Curated computing community links"
+        },
+        {
+          "title": "Julia Evans",
+          "url": "https://jvns.ca/atom.xml",
+          "siteUrl": "https://jvns.ca",
+          "description": "Clear explanations of how computers work"
+        },
+        {
+          "title": "Stack Overflow Blog",
+          "url": "https://stackoverflow.blog/feed/",
+          "siteUrl": "https://stackoverflow.blog",
+          "description": "Developer insights and community"
+        },
+        {
+          "title": "InfoQ",
+          "url": "https://feed.infoq.com/",
+          "siteUrl": "https://www.infoq.com",
+          "description": "Software development news and patterns"
+        },
+        {
+          "title": "CSS-Tricks",
+          "url": "https://css-tricks.com/feed/",
+          "siteUrl": "https://css-tricks.com",
+          "description": "Web development tips and techniques"
+        },
+        {
+          "title": "Smashing Magazine",
+          "url": "https://www.smashingmagazine.com/feed/",
+          "siteUrl": "https://www.smashingmagazine.com",
+          "description": "Web design and front-end development"
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "category": "Cybersecurity",
+      "emoji": "🔐",
+      "description": "Security research, threats, and best practices",
+      "feeds": [
+        {
+          "title": "Krebs on Security",
+          "url": "https://krebsonsecurity.com/feed/",
+          "siteUrl": "https://krebsonsecurity.com",
+          "description": "In-depth security news and investigation"
+        },
+        {
+          "title": "Schneier on Security",
+          "url": "https://www.schneier.com/feed/atom/",
+          "siteUrl": "https://www.schneier.com",
+          "description": "Security expert commentary and analysis"
+        },
+        {
+          "title": "Dark Reading",
+          "url": "https://www.darkreading.com/rss.xml",
+          "siteUrl": "https://www.darkreading.com",
+          "description": "Enterprise cybersecurity news"
+        },
+        {
+          "title": "The Hacker News",
+          "url": "https://feeds.feedburner.com/TheHackersNews",
+          "siteUrl": "https://thehackernews.com",
+          "description": "Cybersecurity news and analysis"
+        },
+        {
+          "title": "BleepingComputer",
+          "url": "https://www.bleepingcomputer.com/feed/",
+          "siteUrl": "https://www.bleepingcomputer.com",
+          "description": "Security news and tech support"
+        },
+        {
+          "title": "SANS Internet Storm Center",
+          "url": "https://isc.sans.edu/rssfeed_full.xml",
+          "siteUrl": "https://isc.sans.edu",
+          "description": "Daily security diary and threat alerts"
+        },
+        {
+          "title": "Troy Hunt Blog",
+          "url": "https://www.troyhunt.com/rss/",
+          "siteUrl": "https://www.troyhunt.com",
+          "description": "Web security research and breaches"
+        },
+        {
+          "title": "The Record",
+          "url": "https://therecord.media/feed/",
+          "siteUrl": "https://therecord.media",
+          "description": "Cybersecurity news from Recorded Future"
+        }
+      ]
+    },
+    {
+      "id": "data-science",
+      "category": "Data Science",
+      "emoji": "📊",
+      "description": "Data analytics, visualization, and machine learning",
+      "feeds": [
+        {
+          "title": "Towards Data Science",
+          "url": "https://towardsdatascience.com/feed",
+          "siteUrl": "https://towardsdatascience.com",
+          "description": "Data science tutorials and insights"
+        },
+        {
+          "title": "KDNuggets",
+          "url": "https://www.kdnuggets.com/feed",
+          "siteUrl": "https://www.kdnuggets.com",
+          "description": "Data science, ML, and AI news"
+        },
+        {
+          "title": "O'Reilly Radar",
+          "url": "https://www.oreilly.com/radar/feed/index.xml",
+          "siteUrl": "https://www.oreilly.com/radar",
+          "description": "Technology and data insights"
+        },
+        {
+          "title": "Analytics Vidhya",
+          "url": "https://www.analyticsvidhya.com/feed/",
+          "siteUrl": "https://www.analyticsvidhya.com",
+          "description": "Data science tutorials and competitions"
+        },
+        {
+          "title": "Flowing Data",
+          "url": "https://flowingdata.com/feed",
+          "siteUrl": "https://flowingdata.com",
+          "description": "Data visualization and statistics"
+        },
+        {
+          "title": "Statistical Modeling, Causal Inference",
+          "url": "https://statmodeling.stat.columbia.edu/feed/",
+          "siteUrl": "https://statmodeling.stat.columbia.edu",
+          "description": "Andrew Gelman and colleagues on statistics"
+        }
+      ]
+    },
+    {
+      "id": "science",
+      "category": "Science",
+      "emoji": "🔬",
+      "description": "Scientific research, discoveries, and breakthroughs",
+      "feeds": [
+        {
+          "title": "Quanta Magazine",
+          "url": "https://www.quantamagazine.org/feed/",
+          "siteUrl": "https://www.quantamagazine.org",
+          "description": "Illuminating math and physics research"
+        },
+        {
+          "title": "Nature",
+          "url": "https://www.nature.com/nature.rss",
+          "siteUrl": "https://www.nature.com",
+          "description": "Leading international scientific journal"
+        },
+        {
+          "title": "Science: News",
+          "url": "https://www.science.org/rss/news_current.xml",
+          "siteUrl": "https://www.science.org/news",
+          "description": "News from the journal Science (AAAS)"
+        },
+        {
+          "title": "Scientific American",
+          "url": "https://www.scientificamerican.com/platform/syndication/rss/",
+          "siteUrl": "https://www.scientificamerican.com",
+          "description": "Science for curious minds"
+        },
+        {
+          "title": "Science Daily",
+          "url": "https://www.sciencedaily.com/rss/top/science.xml",
+          "siteUrl": "https://www.sciencedaily.com",
+          "description": "Breaking science news every day"
+        },
+        {
+          "title": "Phys.org",
+          "url": "https://phys.org/rss-feed/",
+          "siteUrl": "https://phys.org",
+          "description": "Physics, materials science, and more"
+        },
+        {
+          "title": "Live Science",
+          "url": "https://www.livescience.com/feeds/all",
+          "siteUrl": "https://www.livescience.com",
+          "description": "Science news and amazing discoveries"
+        }
+      ]
+    },
+    {
+      "id": "space",
+      "category": "Space & Astronomy",
+      "emoji": "🌌",
+      "description": "Space exploration, astronomy, and the cosmos",
+      "feeds": [
+        {
+          "title": "NASA Breaking News",
+          "url": "https://www.nasa.gov/news-release/feed/",
+          "siteUrl": "https://www.nasa.gov",
+          "description": "Official news from NASA"
+        },
+        {
+          "title": "Space.com",
+          "url": "https://www.space.com/feeds/all",
+          "siteUrl": "https://www.space.com",
+          "description": "Space exploration and astronomy news"
+        },
+        {
+          "title": "Astronomy Picture of the Day",
+          "url": "https://apod.com/feed.rss",
+          "siteUrl": "https://apod.nasa.gov",
+          "description": "Daily cosmic wonders from NASA"
+        },
+        {
+          "title": "Sky & Telescope",
+          "url": "https://skyandtelescope.org/astronomy-news/feed/",
+          "siteUrl": "https://skyandtelescope.org",
+          "description": "Astronomy news and observing guides"
+        },
+        {
+          "title": "Universe Today",
+          "url": "https://www.universetoday.com/feed/",
+          "siteUrl": "https://www.universetoday.com",
+          "description": "Space and astronomy news"
+        },
+        {
+          "title": "The Planetary Society",
+          "url": "https://www.planetary.org/rss/articles",
+          "siteUrl": "https://www.planetary.org",
+          "description": "Space advocacy and exploration news"
+        },
+        {
+          "title": "ESA News",
+          "url": "https://www.esa.int/rssfeed/Our_Activities/Space_Science",
+          "siteUrl": "https://www.esa.int",
+          "description": "European Space Agency science news"
+        }
+      ]
+    },
+    {
+      "id": "health",
+      "category": "Health & Medicine",
+      "emoji": "🏥",
+      "description": "Medical research, wellness, and healthcare news",
+      "feeds": [
+        {
+          "title": "STAT News",
+          "url": "https://www.statnews.com/feed/",
+          "siteUrl": "https://www.statnews.com",
+          "description": "Health, medicine, and biotech"
+        },
+        {
+          "title": "KFF Health News",
+          "url": "https://kffhealthnews.org/feed/",
+          "siteUrl": "https://kffhealthnews.org",
+          "description": "Health policy and health care reporting"
+        },
+        {
+          "title": "The New York Times – Well",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/Well.xml",
+          "siteUrl": "https://www.nytimes.com/section/well",
+          "description": "Health, fitness and living well"
+        },
+        {
+          "title": "Your Local Epidemiologist",
+          "url": "https://yourlocalepidemiologist.substack.com/feed",
+          "siteUrl": "https://yourlocalepidemiologist.substack.com",
+          "description": "Public health science, explained"
+        },
+        {
+          "title": "The Lancet",
+          "url": "https://www.thelancet.com/rssfeed/lancet_current.xml",
+          "siteUrl": "https://www.thelancet.com",
+          "description": "Leading medical journal"
+        }
+      ]
+    },
+    {
+      "id": "business",
+      "category": "Business & Finance",
+      "emoji": "💼",
+      "description": "Business strategy, leadership, and financial markets",
+      "feeds": [
+        {
+          "title": "Stratechery",
+          "url": "https://stratechery.com/feed/",
+          "siteUrl": "https://stratechery.com",
+          "description": "Ben Thompson on the business of technology"
+        },
+        {
+          "title": "Benedict Evans",
+          "url": "https://www.ben-evans.com/benedictevans?format=rss",
+          "siteUrl": "https://www.ben-evans.com",
+          "description": "Essays on tech, media and what changes next"
+        },
+        {
+          "title": "Exponential View",
+          "url": "https://www.exponentialview.co/feed",
+          "siteUrl": "https://www.exponentialview.co",
+          "description": "Azeem Azhar on technology, the economy and society"
+        },
+        {
+          "title": "Lenny's Newsletter",
+          "url": "https://www.lennysnewsletter.com/feed",
+          "siteUrl": "https://www.lennysnewsletter.com",
+          "description": "Product, growth and careers"
+        },
+        {
+          "title": "Not Boring",
+          "url": "https://www.notboring.co/feed",
+          "siteUrl": "https://www.notboring.co",
+          "description": "Strategy and stories about companies"
+        },
+        {
+          "title": "Inc. Magazine",
+          "url": "https://www.inc.com/rss",
+          "siteUrl": "https://www.inc.com",
+          "description": "Growing companies and entrepreneurs"
+        },
+        {
+          "title": "Entrepreneur",
+          "url": "https://www.entrepreneur.com/latest.rss",
+          "siteUrl": "https://www.entrepreneur.com",
+          "description": "Business startup and growth"
+        },
+        {
+          "title": "Fast Company",
+          "url": "https://www.fastcompany.com/latest/rss",
+          "siteUrl": "https://www.fastcompany.com",
+          "description": "Innovation in business and design"
+        },
+        {
+          "title": "Forbes",
+          "url": "https://www.forbes.com/innovation/feed2",
+          "siteUrl": "https://www.forbes.com",
+          "description": "Business news and analysis"
+        }
+      ]
+    },
+    {
+      "id": "startups",
+      "category": "Startups & Venture Capital",
+      "emoji": "🚀",
+      "description": "Startup ecosystem, funding, and founder stories",
+      "feeds": [
+        {
+          "title": "Y Combinator Blog",
+          "url": "https://www.ycombinator.com/blog/rss/",
+          "siteUrl": "https://www.ycombinator.com",
+          "description": "Insights from the top startup accelerator"
+        },
+        {
+          "title": "a16z Blog",
+          "url": "https://a16z.substack.com/feed",
+          "siteUrl": "https://a16z.com",
+          "description": "Technology and culture from Andreessen Horowitz"
+        },
+        {
+          "title": "Crunchbase News",
+          "url": "https://news.crunchbase.com/feed/",
+          "siteUrl": "https://news.crunchbase.com",
+          "description": "Startup funding and M&A news"
+        },
+        {
+          "title": "TechCrunch – Startups",
+          "url": "https://techcrunch.com/category/startups/feed/",
+          "siteUrl": "https://techcrunch.com/category/startups",
+          "description": "Startup launches and funding rounds"
+        },
+        {
+          "title": "Sifted",
+          "url": "https://sifted.eu/feed",
+          "siteUrl": "https://sifted.eu",
+          "description": "Europe's startups and the people funding them"
+        },
+        {
+          "title": "SaaStr",
+          "url": "https://www.saastr.com/feed/",
+          "siteUrl": "https://www.saastr.com",
+          "description": "Jason Lemkin on building SaaS companies"
+        }
+      ]
+    },
+    {
+      "id": "world-news",
+      "category": "World News",
+      "emoji": "📰",
+      "description": "Global news, politics, and current affairs",
+      "feeds": [
+        {
+          "title": "BBC News – World",
+          "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+          "siteUrl": "https://www.bbc.com/news/world",
+          "description": "International news from the BBC"
+        },
+        {
+          "title": "The Guardian",
+          "url": "https://www.theguardian.com/world/rss",
+          "siteUrl": "https://www.theguardian.com",
+          "description": "International news and analysis"
+        },
+        {
+          "title": "NPR News",
+          "url": "https://feeds.npr.org/1001/rss.xml",
+          "siteUrl": "https://www.npr.org",
+          "description": "National public radio top stories"
+        },
+        {
+          "title": "The New York Times – World",
+          "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+          "siteUrl": "https://www.nytimes.com/section/world",
+          "description": "International reporting"
+        },
+        {
+          "title": "Al Jazeera",
+          "url": "https://www.aljazeera.com/xml/rss/all.xml",
+          "siteUrl": "https://www.aljazeera.com",
+          "description": "Global news with non-Western perspective"
+        },
+        {
+          "title": "The Economist",
+          "url": "https://www.economist.com/the-world-this-week/rss.xml",
+          "siteUrl": "https://www.economist.com",
+          "description": "Global affairs analysis and opinion"
+        },
+        {
+          "title": "Foreign Affairs",
+          "url": "https://www.foreignaffairs.com/rss.xml",
+          "siteUrl": "https://www.foreignaffairs.com",
+          "description": "International relations and policy"
+        }
+      ]
+    },
+    {
+      "id": "economics",
+      "category": "Economics & Markets",
+      "emoji": "📈",
+      "description": "Economics, financial markets, and macro analysis",
+      "feeds": [
+        {
+          "title": "Marginal Revolution",
+          "url": "https://marginalrevolution.com/feed",
+          "siteUrl": "https://marginalrevolution.com",
+          "description": "Economics blog by Tyler Cowen"
+        },
+        {
+          "title": "Planet Money",
+          "url": "https://feeds.npr.org/510289/podcast.xml",
+          "siteUrl": "https://www.npr.org/sections/money",
+          "description": "Economics made fun by NPR"
+        },
+        {
+          "title": "Calculated Risk",
+          "url": "https://www.calculatedriskblog.com/feeds/posts/default",
+          "siteUrl": "https://www.calculatedriskblog.com",
+          "description": "Economic analysis and housing data"
+        },
+        {
+          "title": "Naked Capitalism",
+          "url": "https://www.nakedcapitalism.com/feed",
+          "siteUrl": "https://www.nakedcapitalism.com",
+          "description": "Finance and economics analysis"
+        },
+        {
+          "title": "The Big Picture",
+          "url": "https://ritholtz.com/feed/",
+          "siteUrl": "https://ritholtz.com",
+          "description": "Markets and macroeconomics by Barry Ritholtz"
+        },
+        {
+          "title": "VoxEU",
+          "url": "https://cepr.org/rss/vox-content",
+          "siteUrl": "https://cepr.org/voxeu",
+          "description": "Research-based economic policy analysis"
+        },
+        {
+          "title": "Noahpinion",
+          "url": "https://www.noahpinion.blog/feed",
+          "siteUrl": "https://www.noahpinion.blog",
+          "description": "Noah Smith on economics and the world"
+        }
+      ]
+    },
+    {
+      "id": "climate",
+      "category": "Climate & Environment",
+      "emoji": "🌿",
+      "description": "Climate change, sustainability, and ecology",
+      "feeds": [
+        {
+          "title": "Inside Climate News",
+          "url": "https://insideclimatenews.org/feed/",
+          "siteUrl": "https://insideclimatenews.org",
+          "description": "Pulitzer-winning climate reporting"
+        },
+        {
+          "title": "Yale Environment 360",
+          "url": "https://e360.yale.edu/feed.xml",
+          "siteUrl": "https://e360.yale.edu",
+          "description": "Environmental news and analysis from Yale"
+        },
+        {
+          "title": "Carbon Brief",
+          "url": "https://www.carbonbrief.org/feed/",
+          "siteUrl": "https://www.carbonbrief.org",
+          "description": "Climate science and policy explained"
+        },
+        {
+          "title": "The Guardian – Environment",
+          "url": "https://www.theguardian.com/environment/rss",
+          "siteUrl": "https://www.theguardian.com",
+          "description": "Environmental news from The Guardian"
+        },
+        {
+          "title": "Mongabay",
+          "url": "https://news.mongabay.com/feed/",
+          "siteUrl": "https://news.mongabay.com",
+          "description": "Conservation and wildlife news"
+        },
+        {
+          "title": "RenewEconomy",
+          "url": "https://reneweconomy.com.au/feed/",
+          "siteUrl": "https://reneweconomy.com.au",
+          "description": "Clean energy news and analysis"
+        },
+        {
+          "title": "Canary Media",
+          "url": "https://www.canarymedia.com/rss",
+          "siteUrl": "https://www.canarymedia.com",
+          "description": "The clean energy transition"
+        },
+        {
+          "title": "Grist",
+          "url": "https://grist.org/feed/",
+          "siteUrl": "https://grist.org",
+          "description": "Climate, justice and solutions"
+        }
+      ]
+    },
+    {
+      "id": "design",
+      "category": "Design & Product",
+      "emoji": "🎨",
+      "description": "UX design, product thinking, and visual culture",
+      "feeds": [
+        {
+          "title": "A List Apart",
+          "url": "https://alistapart.com/main/feed/",
+          "siteUrl": "https://alistapart.com",
+          "description": "Web standards and design patterns"
+        },
+        {
+          "title": "UX Collective",
+          "url": "https://uxdesign.cc/feed",
+          "siteUrl": "https://uxdesign.cc",
+          "description": "UX design articles and case studies"
+        },
+        {
+          "title": "Nielsen Norman Group",
+          "url": "https://www.nngroup.com/feed/rss/",
+          "siteUrl": "https://www.nngroup.com",
+          "description": "UX research and usability studies"
+        },
+        {
+          "title": "Product Hunt",
+          "url": "https://www.producthunt.com/feed",
+          "siteUrl": "https://www.producthunt.com",
+          "description": "Discover new products every day"
+        },
+        {
+          "title": "Sidebar.io",
+          "url": "https://sidebar.io/feed.xml",
+          "siteUrl": "https://sidebar.io",
+          "description": "5 best design links every day"
+        },
+        {
+          "title": "Creative Bloq",
+          "url": "https://www.creativebloq.com/feeds/all",
+          "siteUrl": "https://www.creativebloq.com",
+          "description": "Art, design and creative tools"
+        }
+      ]
+    },
+    {
+      "id": "ideas",
+      "category": "Philosophy & Ideas",
+      "emoji": "💡",
+      "description": "Big ideas, philosophy, and long-form thinking",
+      "feeds": [
+        {
+          "title": "Aeon",
+          "url": "https://aeon.co/feed.rss",
+          "siteUrl": "https://aeon.co",
+          "description": "Philosophy, psychology, and big ideas"
+        },
+        {
+          "title": "The Atlantic",
+          "url": "https://www.theatlantic.com/feed/all/",
+          "siteUrl": "https://www.theatlantic.com",
+          "description": "Ideas and culture from The Atlantic"
+        },
+        {
+          "title": "Nautilus",
+          "url": "https://nautil.us/feed/",
+          "siteUrl": "https://nautil.us",
+          "description": "Science and philosophy magazine"
+        },
+        {
+          "title": "The Marginalian",
+          "url": "https://www.themarginalian.org/feed/",
+          "siteUrl": "https://www.themarginalian.org",
+          "description": "Maria Popova on ideas, art, and wonder"
+        },
+        {
+          "title": "Longreads",
+          "url": "https://longreads.com/feed/",
+          "siteUrl": "https://longreads.com",
+          "description": "Best long-form stories and essays"
+        },
+        {
+          "title": "Quillette",
+          "url": "https://quillette.com/rss/",
+          "siteUrl": "https://quillette.com",
+          "description": "Heterodox ideas and free thought"
+        },
+        {
+          "title": "Arts & Letters Daily",
+          "url": "http://www.aldaily.com/feed/",
+          "siteUrl": "https://www.aldaily.com",
+          "description": "Philosophy, arts, and literature links"
+        }
+      ]
+    },
+    {
+      "id": "law-policy",
+      "category": "Law & Policy",
+      "emoji": "⚖️",
+      "description": "Legal analysis, policy, and governance",
+      "feeds": [
+        {
+          "title": "SCOTUSblog",
+          "url": "https://www.scotusblog.com/feed/",
+          "siteUrl": "https://www.scotusblog.com",
+          "description": "Supreme Court news and analysis"
+        },
+        {
+          "title": "Lawfare",
+          "url": "https://www.lawfaremedia.org/feeds/articles",
+          "siteUrl": "https://www.lawfaremedia.org",
+          "description": "National security law and policy"
+        },
+        {
+          "title": "Above the Law",
+          "url": "https://abovethelaw.com/feed/",
+          "siteUrl": "https://abovethelaw.com",
+          "description": "Legal industry news and insights"
+        },
+        {
+          "title": "ProPublica",
+          "url": "https://www.propublica.org/feeds/propublica/main",
+          "siteUrl": "https://www.propublica.org",
+          "description": "Investigative journalism in public interest"
+        },
+        {
+          "title": "Politico",
+          "url": "https://rss.politico.com/politics-news.xml",
+          "siteUrl": "https://www.politico.com",
+          "description": "Politics and policy news"
+        },
+        {
+          "title": "Vox",
+          "url": "https://www.vox.com/rss/index.xml",
+          "siteUrl": "https://www.vox.com",
+          "description": "Complex news explained clearly"
+        },
+        {
+          "title": "The Hill",
+          "url": "https://thehill.com/news/feed/",
+          "siteUrl": "https://thehill.com",
+          "description": "Congressional and political news"
+        }
+      ]
+    },
+    {
+      "id": "open-source",
+      "category": "Open Source",
+      "emoji": "🌐",
+      "description": "Open source projects, Linux, and free software",
+      "feeds": [
+        {
+          "title": "Phoronix",
+          "url": "https://www.phoronix.com/rss.php",
+          "siteUrl": "https://www.phoronix.com",
+          "description": "Linux hardware benchmarks and open source"
+        },
+        {
+          "title": "It's FOSS",
+          "url": "https://itsfoss.com/feed/",
+          "siteUrl": "https://itsfoss.com",
+          "description": "Linux news and open source tutorials"
+        },
+        {
+          "title": "LWN.net",
+          "url": "https://lwn.net/headlines/rss",
+          "siteUrl": "https://lwn.net",
+          "description": "In-depth Linux and free software news"
+        },
+        {
+          "title": "OSNews",
+          "url": "https://www.osnews.com/feed/",
+          "siteUrl": "https://www.osnews.com",
+          "description": "Operating systems and open source"
+        },
+        {
+          "title": "GitHub Changelog",
+          "url": "https://github.blog/changelog/feed/",
+          "siteUrl": "https://github.blog/changelog",
+          "description": "GitHub product updates and new features"
+        },
+        {
+          "title": "The Register – Open Source",
+          "url": "https://www.theregister.com/software/headlines.atom",
+          "siteUrl": "https://www.theregister.com",
+          "description": "Open source news and opinion"
+        },
+        {
+          "title": "Open Source Initiative",
+          "url": "https://opensource.org/blog/feed",
+          "siteUrl": "https://opensource.org",
+          "description": "News on open source licensing and policy"
+        }
+      ]
+    },
+    {
+      "id": "gaming",
+      "category": "Gaming",
+      "emoji": "🎮",
+      "description": "Video games, esports, and gaming culture",
+      "feeds": [
+        {
+          "title": "IGN",
+          "url": "https://feeds.ign.com/ign/all",
+          "siteUrl": "https://www.ign.com",
+          "description": "Games, movies, and entertainment"
+        },
+        {
+          "title": "Polygon",
+          "url": "https://www.polygon.com/rss/index.xml",
+          "siteUrl": "https://www.polygon.com",
+          "description": "Gaming culture, reviews, and guides"
+        },
+        {
+          "title": "Eurogamer",
+          "url": "https://www.eurogamer.net/feed/news",
+          "siteUrl": "https://www.eurogamer.net",
+          "description": "European gaming news and reviews"
+        },
+        {
+          "title": "Rock Paper Shotgun",
+          "url": "https://www.rockpapershotgun.com/feed/",
+          "siteUrl": "https://www.rockpapershotgun.com",
+          "description": "PC gaming news and opinions"
+        },
+        {
+          "title": "Kotaku",
+          "url": "https://kotaku.com/rss",
+          "siteUrl": "https://kotaku.com",
+          "description": "Gaming culture and news"
+        },
+        {
+          "title": "Giant Bomb",
+          "url": "https://www.giantbomb.com/feeds/reviews/",
+          "siteUrl": "https://www.giantbomb.com",
+          "description": "Game reviews and video features"
+        }
+      ]
+    },
+    {
+      "id": "crypto",
+      "category": "Crypto & Web3",
+      "emoji": "₿",
+      "description": "Blockchain, cryptocurrency, and decentralized tech",
+      "feeds": [
+        {
+          "title": "CoinDesk",
+          "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+          "siteUrl": "https://www.coindesk.com",
+          "description": "Cryptocurrency and blockchain news"
+        },
+        {
+          "title": "Decrypt",
+          "url": "https://decrypt.co/feed",
+          "siteUrl": "https://decrypt.co",
+          "description": "Crypto news and deep analysis"
+        },
+        {
+          "title": "CoinTelegraph",
+          "url": "https://cointelegraph.com/rss",
+          "siteUrl": "https://cointelegraph.com",
+          "description": "Bitcoin and crypto market news"
+        },
+        {
+          "title": "The Block",
+          "url": "https://www.theblock.co/rss.xml",
+          "siteUrl": "https://www.theblock.co",
+          "description": "Institutional crypto research and news"
+        },
+        {
+          "title": "Blockworks",
+          "url": "https://blockworks.co/feed/",
+          "siteUrl": "https://blockworks.co",
+          "description": "Institutional crypto and DeFi news"
+        },
+        {
+          "title": "Bitcoin Magazine",
+          "url": "https://bitcoinmagazine.com/feed",
+          "siteUrl": "https://bitcoinmagazine.com",
+          "description": "Bitcoin technology and culture"
+        }
+      ]
+    },
+    {
+      "id": "personal-finance",
+      "category": "Personal Finance",
+      "emoji": "💰",
+      "description": "Money management, investing, and financial independence",
+      "feeds": [
+        {
+          "title": "Mr. Money Mustache",
+          "url": "https://www.mrmoneymustache.com/feed/",
+          "siteUrl": "https://www.mrmoneymustache.com",
+          "description": "Early retirement and smart spending"
+        },
+        {
+          "title": "NerdWallet",
+          "url": "https://www.nerdwallet.com/blog/feed/",
+          "siteUrl": "https://www.nerdwallet.com",
+          "description": "Financial product comparisons and tips"
+        },
+        {
+          "title": "Afford Anything",
+          "url": "https://affordanything.com/feed/",
+          "siteUrl": "https://affordanything.com",
+          "description": "Financial independence and mindful spending"
+        },
+        {
+          "title": "A Wealth of Common Sense",
+          "url": "https://awealthofcommonsense.com/feed/",
+          "siteUrl": "https://awealthofcommonsense.com",
+          "description": "Simplified investing and market perspective"
+        },
+        {
+          "title": "Of Dollars And Data",
+          "url": "https://ofdollarsanddata.com/feed/",
+          "siteUrl": "https://ofdollarsanddata.com",
+          "description": "Investing and money, with the data"
+        }
+      ]
+    },
+    {
+      "id": "media",
+      "category": "Media & Entertainment",
+      "emoji": "🎬",
+      "description": "Film, TV, music, and pop culture",
+      "feeds": [
+        {
+          "title": "Variety",
+          "url": "https://variety.com/feed/",
+          "siteUrl": "https://variety.com",
+          "description": "Entertainment industry news and reviews"
+        },
+        {
+          "title": "Deadline Hollywood",
+          "url": "https://deadline.com/feed/",
+          "siteUrl": "https://deadline.com",
+          "description": "Breaking film and TV news"
+        },
+        {
+          "title": "IndieWire",
+          "url": "https://www.indiewire.com/feed/",
+          "siteUrl": "https://www.indiewire.com",
+          "description": "Film and TV criticism and news"
+        },
+        {
+          "title": "Vulture",
+          "url": "https://feeds.feedburner.com/nymag/vulture",
+          "siteUrl": "https://www.vulture.com",
+          "description": "Culture and entertainment from New York"
+        },
+        {
+          "title": "The AV Club",
+          "url": "https://www.avclub.com/rss",
+          "siteUrl": "https://www.avclub.com",
+          "description": "Pop culture criticism and reviews"
+        },
+        {
+          "title": "Pitchfork",
+          "url": "https://pitchfork.com/feed/feed-news/rss",
+          "siteUrl": "https://pitchfork.com",
+          "description": "Music news, reviews, and features"
+        }
+      ]
+    },
+    {
+      "id": "books",
+      "category": "Books & Literature",
+      "emoji": "📚",
+      "description": "Books, writing, and literary culture",
+      "feeds": [
+        {
+          "title": "The New York Review of Books",
+          "url": "https://feeds.feedburner.com/nybooks",
+          "siteUrl": "https://www.nybooks.com",
+          "description": "Literary and intellectual essays"
+        },
+        {
+          "title": "Literary Hub",
+          "url": "https://lithub.com/feed/",
+          "siteUrl": "https://lithub.com",
+          "description": "Daily literary news and criticism"
+        },
+        {
+          "title": "Electric Literature",
+          "url": "https://electricliterature.com/feed/",
+          "siteUrl": "https://electricliterature.com",
+          "description": "Fiction, essays, and criticism"
+        },
+        {
+          "title": "The Paris Review",
+          "url": "https://www.theparisreview.org/blog/feed/",
+          "siteUrl": "https://www.theparisreview.org",
+          "description": "Fiction, poetry, and author interviews"
+        },
+        {
+          "title": "Book Riot",
+          "url": "https://bookriot.com/feed/",
+          "siteUrl": "https://bookriot.com",
+          "description": "All things books and reading culture"
+        },
+        {
+          "title": "Five Books",
+          "url": "https://fivebooks.com/feed/",
+          "siteUrl": "https://fivebooks.com",
+          "description": "Expert reading recommendations by topic"
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "category": "Education & Learning",
+      "emoji": "🎓",
+      "description": "Education technology, research, and learning",
+      "feeds": [
+        {
+          "title": "The Learning Scientists",
+          "url": "https://www.learningscientists.org/blog?format=rss",
+          "siteUrl": "https://www.learningscientists.org",
+          "description": "Research on how people learn, made practical"
+        },
+        {
+          "title": "Cult of Pedagogy",
+          "url": "https://www.cultofpedagogy.com/feed/",
+          "siteUrl": "https://www.cultofpedagogy.com",
+          "description": "Teaching strategies and classroom ideas"
+        },
+        {
+          "title": "The Hechinger Report",
+          "url": "https://hechingerreport.org/feed/",
+          "siteUrl": "https://hechingerreport.org",
+          "description": "Reporting on education and what works"
+        },
+        {
+          "title": "EdSurge",
+          "url": "https://www.edsurge.com/articles_rss",
+          "siteUrl": "https://www.edsurge.com",
+          "description": "Education technology news"
+        },
+        {
+          "title": "Ditch That Textbook",
+          "url": "https://ditchthattextbook.com/feed/",
+          "siteUrl": "https://ditchthattextbook.com",
+          "description": "Ed tech and AI in the classroom"
+        },
+        {
+          "title": "Inside Higher Ed",
+          "url": "https://www.insidehighered.com/rss.xml",
+          "siteUrl": "https://www.insidehighered.com",
+          "description": "Higher education news and analysis"
+        }
+      ]
+    }
+  ]
+}

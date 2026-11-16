@@ -27,6 +27,29 @@ export function decodeBody(bytes, contentType) {
 }
 
 /**
+ * The body's bytes, read as they arrive and given up once more than maxBytes
+ * have come (the error 'Response too large'). The bytes are counted after
+ * Content-Encoding is undone, so a small compressed body that would expand
+ * past the cap never sits whole in memory, and a missing or understated
+ * Content-Length doesn't matter.
+ */
+export async function readCapped(res, maxBytes) {
+  if (!res.body) return new Uint8Array(0);
+  const reader = res.body.getReader();
+  const chunks = [];
+  let size = 0;
+  for (let next = await reader.read(); !next.done; next = await reader.read()) {
+    size += next.value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel().catch(() => {});
+      throw new Error('Response too large');
+    }
+    chunks.push(next.value);
+  }
+  return Buffer.concat(chunks, size);
+}
+
+/**
  * Requests `url` (a GET unless `method` says otherwise, with an optional
  * `body`) and resolves to { text, url } (url = the final URL after
  * redirects). Throws on a non-2xx status (the error carries `status`), a
@@ -36,7 +59,6 @@ export async function fetchText(url, { method, headers = {}, body, timeoutMs = 1
   const res = await safeFetch(url, { method, headers, body, signal: AbortSignal.timeout(timeoutMs) });
   if (!res.ok) throw Object.assign(new Error(`Status code ${res.status}`), { status: res.status });
   if (Number(res.headers.get('content-length')) > maxBytes) throw new Error('Response too large');
-  const bytes = new Uint8Array(await res.arrayBuffer());
-  if (bytes.length > maxBytes) throw new Error('Response too large');
+  const bytes = await readCapped(res, maxBytes);
   return { text: decodeBody(bytes, res.headers.get('content-type')), url: res.url || url };
 }

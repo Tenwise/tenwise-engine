@@ -6,7 +6,11 @@ import { refreshFeeds } from './feedRefresh.js';
 import { createRefresher, refreshMinutes, startSchedule } from './scheduler.js';
 
 export const refresher = createRefresher({
-  refreshAll: () => refreshFeeds(listFeeds()),
+  refreshAll: (onProgress) => refreshFeeds(listFeeds(), undefined, onProgress),
+  refreshSome: (ids, onProgress) => {
+    const wanted = new Set(ids);
+    return refreshFeeds(listFeeds().filter((f) => wanted.has(f.id)), undefined, onProgress);
+  },
   readMinutes: () => refreshMinutes(readSettings()),
 });
 

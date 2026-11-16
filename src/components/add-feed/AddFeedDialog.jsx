@@ -82,10 +82,25 @@ function TabPanel({ tab, setTab, state }) {
   return <UrlTab discovery={discovery} loading={status.loading} adder={adder} />;
 }
 
+// Opening on a given tab (`tab`, a tab id), for example from a plugin's
+// sidebar section; otherwise the dialog keeps the tab it was left on.
+// The request is followed once per opening, while rendering, as React
+// suggests for state that follows a prop.
+function useOpeningTab(isOpen, opening) {
+  const [tab, setTab] = useState(opening ?? 'discover');
+  const [followed, setFollowed] = useState(null);
+  const request = isOpen ? opening : null;
+  if (request !== followed) {
+    setFollowed(request);
+    if (TABS.some((t) => t.id === request)) setTab(request);
+  }
+  return [tab, setTab];
+}
+
 /** Add feeds: by URL, catalog search, popular categories, plugin tabs or Google Alerts; into a folder. */
-export default function AddFeedDialog({ isOpen, onClose }) {
+export default function AddFeedDialog({ isOpen, tab: opening = null, onClose }) {
   const { onAddFeed, existingFeedUrls, folders } = useLibrary();
-  const [tab, setTab] = useState('discover');
+  const [tab, setTab] = useOpeningTab(isOpen, opening);
   const [folderId, setFolderId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [category, setCategory] = useState('all');

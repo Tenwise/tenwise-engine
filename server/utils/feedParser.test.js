@@ -20,7 +20,7 @@ test('normalizeItem picks the richest fields and fills defaults', () => {
     contentSnippet: 'snip', dcCreator: 'Ann', creator: 'Bob', isoDate: '2026-01-02T00:00:00.000Z',
     guid: 'g1', categories: ['x'],
   }), {
-    title: 'T', link: 'https://e.com/a', content: '<p>full</p>', summary: 'snip', author: 'Ann',
+    title: 'T', link: 'https://e.com/a', content: '<p>full</p>', summary: 'snip', author: 'Ann', sourceTitle: '',
     publishedAt: '2026-01-02T00:00:00.000Z', guid: 'g1', imageUrl: '', categories: ['x'],
   });
 
@@ -88,4 +88,12 @@ test('a feed broken only by a bare & still parses', async () => {
 
 test('a web page where the feed should be gets a plain explanation', async () => {
   await assert.rejects(parseFeedText('<!doctype html><html><head><script>a && b</script></head></html>'), { message: NOT_A_FEED });
+});
+
+test('an item\'s <source> names its publication, as Google News\'s items do (BRF-23)', async () => {
+  const feed = normalizeFeed(await parseFeedText(`<rss version="2.0"><channel><title>"climate tech" - Google News</title>
+    <item><title>Q3 2026 Climate Tech Report - PitchBook</title><link>https://news.google.com/rss/articles/CBMiExample?oc=5</link>
+    <source url="https://pitchbook.com">PitchBook</source></item>
+    <item><title>No source</title><link>https://e.com/x</link></item></channel></rss>`), 'https://news.google.com/rss/search?q=climate');
+  assert.deepEqual(feed.items.map((i) => i.sourceTitle), ['PitchBook', '']);
 });

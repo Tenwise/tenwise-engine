@@ -23,11 +23,14 @@ const STATUS = {
   loading: { label: 'Loading', title: 'Fetching the full article…' },
   full: { label: 'Full article', title: 'Showing the full article' },
   feed: { label: 'Feed text', title: 'Showing the feed’s text; the full article could not be fetched' },
+  // AI-11: the page was fetched, but the feed has more of the article.
+  fuller: { label: 'Feed text', title: 'Showing the feed’s text: it has more of the article than the page' },
 };
 
 function ExtractionStatus({ extraction }) {
   let state = null;
   if (extraction.extracting) state = 'loading';
+  else if (extraction.skipped) state = 'fuller';
   else if (extraction.content) state = 'full';
   else if (extraction.error) state = 'feed';
   if (!state) return null;

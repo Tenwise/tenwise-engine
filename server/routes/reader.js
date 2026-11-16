@@ -1,15 +1,17 @@
 import { Router } from 'express';
+import { muteCondition } from '../../shared/rules.js';
 import {
   createFolder, listFolders, updateFolderById, removeFolderById, removeFolderAndFeedsById,
   findFolderByName,
   createFeed, listFeeds, listRemovedFeeds, getFeed, updateFeed, removeFeed,
-  bulkInsertArticles, getArticleById, findArticleByLink,
+  bulkInsertArticles, getArticleById, findArticleByLink, setArticleImage,
   updateArticle, bulkUpdateArticles, getArticlesByAiStatus,
   getQueueCount, resetProcessingToQueued, claimNextQueued, getCounts, clearAll,
   DB_PATH,
 } from '../db/reader.js';
-import { getArticlePage, markViewRead } from '../db/articlePages.js';
+import { currentRules, feedAuthors, getArticlePage, markViewRead } from '../db/articlePages.js';
 import { FILTER_KEYS } from '../../shared/aiFilters.js';
+import { findPageImage } from '../utils/pageImage.js';
 
 const router = Router();
 
@@ -85,6 +87,14 @@ router.get('/feeds/:id', (req, res) => {
   } catch (err) { sendDbError(res, err); }
 });
 
+/** GET /feeds/:id/authors — the feed's authors, latest first: [{ author, total, unread }]. */
+router.get('/feeds/:id/authors', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' });
+  try { res.json(feedAuthors(id)); }
+  catch (err) { sendDbError(res, err); }
+});
+
 router.post('/feeds', (req, res) => {
   const { url } = req.body;
   if (!url?.trim()) return res.status(400).json({ error: 'url is required' });
@@ -117,7 +127,7 @@ router.delete('/feeds/:id', (req, res) => {
 // These specific routes must come before /:id
 
 router.get('/articles/counts', (req, res) => {
-  try { res.json(getCounts()); }
+  try { res.json(getCounts(muteCondition(currentRules()))); }
   catch (err) { sendDbError(res, err); }
 });
 
@@ -144,18 +154,21 @@ router.get('/articles/by-link', (req, res) => {
 });
 
 // Each view, and whether it needs the id of a feed or folder.
-const VIEWS = { all: false, today: false, saved: false, unsorted: false, feed: true, folder: true, collection: true };
+const VIEWS = { all: false, today: false, saved: false, unsorted: false, feed: true, folder: true, collection: true, filter: true };
 const text = (value) => (typeof value === 'string' ? value : '');
 
-// The view a request names, or null if it isn't one.
-function viewOf({ view = 'all', id }) {
+// An article's author is at most this long here; a longer one matches nothing anyway.
+const MAX_AUTHOR = 300;
+
+// The view a request names, or null if it isn't one. A feed may be narrowed to one author.
+function viewOf({ view = 'all', id, author }) {
   if (!Object.hasOwn(VIEWS, view)) return null;
   const viewId = Number(id);
   const missingId = VIEWS[view] && !Number.isInteger(viewId);
-  return missingId ? null : { view, id: viewId };
+  return missingId ? null : { view, id: viewId, author: view === 'feed' ? text(author).slice(0, MAX_AUTHOR) : '' };
 }
 
-/** GET /articles/page?view&id&q&aiOnly=1&sentiment=…&offset&limit — one page of a view. */
+/** GET /articles/page?view&id&author&q&aiOnly=1&read=unread|read&after=<ISO>&sentiment=…&offset&limit — one page of a view. */
 router.get('/articles/page', (req, res) => {
   const target = viewOf(req.query);
   if (!target) return res.status(400).json({ error: 'invalid view' });
@@ -165,17 +178,20 @@ router.get('/articles/page', (req, res) => {
       q: text(req.query.q).slice(0, 500),
       filters,
       aiOnly: req.query.aiOnly === '1',
+      read: text(req.query.read),
+      after: text(req.query.after),
+      author: target.author,
       offset: Number(req.query.offset) || 0,
       limit: Number(req.query.limit) || undefined,
     }));
   } catch (err) { sendDbError(res, err); }
 });
 
-/** POST /articles/mark-view-read { view, id } — marks every unread article in the view read. */
+/** POST /articles/mark-view-read { view, id, author? } — marks every unread article in the view read. */
 router.post('/articles/mark-view-read', (req, res) => {
   const target = viewOf(req.body ?? {});
   if (!target) return res.status(400).json({ error: 'invalid view' });
-  try { res.json({ changed: markViewRead(target.view, target.id) }); }
+  try { res.json({ changed: markViewRead(target.view, target.id, target.author) }); }
   catch (err) { sendDbError(res, err); }
 });
 
@@ -187,6 +203,37 @@ router.get('/articles/:id', (req, res) => {
     if (!article) return res.status(404).json({ error: 'Not found' });
     res.json(article);
   } catch (err) { sendDbError(res, err); }
+});
+
+// Articles whose page had no picture, and when that was found: not asked again for a while.
+const NO_IMAGE_FOR_MS = 6 * 60 * 60 * 1000;
+const noImage = new Map();
+
+const askedLately = (id) => Date.now() - (noImage.get(id) ?? -Infinity) < NO_IMAGE_FOR_MS;
+
+// The article's picture: its own, else its page's (stored once found); null when none.
+async function articleImage(article) {
+  if (article.imageUrl) return article.imageUrl;
+  if (!article.link || askedLately(article.id)) return null;
+  const imageUrl = await findPageImage(article.link).catch(() => '');
+  if (imageUrl) {
+    setArticleImage(article.id, imageUrl);
+    return imageUrl;
+  }
+  if (noImage.size >= 5000) noImage.clear();
+  noImage.set(article.id, Date.now());
+  return null;
+}
+
+/** GET /articles/:id/image → { imageUrl } — the feed's picture, else the page's preview image (UX-8), else null. */
+router.get('/articles/:id/image', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'invalid id' });
+  try {
+    const article = getArticleById(id);
+    if (!article) return res.status(404).json({ error: 'Not found' });
+    return res.json({ imageUrl: await articleImage(article) });
+  } catch (err) { return sendDbError(res, err); }
 });
 
 router.post('/articles/bulk-insert', (req, res) => {

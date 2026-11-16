@@ -9,10 +9,12 @@ import { isActive, NAV_ITEMS } from '../sidebar/sidebarModel.js';
 const RAIL_ACTIONS = pluginsOf('railActions');
 
 // A rail button: icon only, label as tooltip; an accent dot when `dot`.
-function RailButton({ label, active, dot, onClick, disabled, children }) {
+// tour names the button for a guided tour (data-tour), such as the hosted app's (GRO-12).
+function RailButton({ label, active, dot, onClick, disabled, tour, children }) {
   return (
     <button
       type="button"
+      data-tour={tour}
       title={label}
       aria-label={label}
       aria-current={active ? 'page' : undefined}
@@ -45,7 +47,7 @@ export default function AppRail({ activeView, onViewChange, counts, actions }) {
           <img src="/tenwise-icon.svg" alt="" className="size-8 rounded-lg" />
         </button>
         {NAV_ITEMS.map(({ type, label, iconTitle, Icon }) => (
-          <RailButton key={type} label={iconTitle || label} active={isActive(activeView, type)} dot={DOT_FOR[type]?.(counts)} onClick={() => onViewChange({ type })}>
+          <RailButton key={type} tour={`nav-${type}`} label={iconTitle || label} active={isActive(activeView, type)} dot={DOT_FOR[type]?.(counts)} onClick={() => onViewChange({ type })}>
             <Icon />
           </RailButton>
         ))}

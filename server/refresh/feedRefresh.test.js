@@ -88,3 +88,10 @@ test('tallyRefreshes adds new articles and names the feeds that failed', () => {
   ], chunk);
   assert.deepEqual(tally, { inserted: 6, failed: ['B', 'C'] });
 });
+
+test('refreshFeeds reports progress at the start and after each few', async () => {
+  const feeds = Array.from({ length: 7 }, (_, i) => ({ id: i, title: `F${i}` }));
+  const seen = [];
+  await refreshFeeds(feeds, async () => ({ inserted: 1 }), (p) => seen.push(p));
+  assert.deepEqual(seen, [{ done: 0, total: 7 }, { done: 5, total: 7 }, { done: 7, total: 7 }]);
+});

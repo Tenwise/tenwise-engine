@@ -36,13 +36,15 @@ router.get('/of/:articleId', (req, res) => {
 const fileNameOf = (name) => `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'collection'}.md`;
 
 /** GET /api/collections/:id/export.md — the collection's articles as one Markdown file (for NotebookLM). */
-router.get('/:id/export.md', (req, res) => {
+router.get('/:id/export.md', async (req, res) => {
   // nosemgrep: ajinabraham.njsscan.xss.xss_node.express_xss -- a text/markdown attachment, served with nosniff
   const id = idOf(req.params.id);
   if (!id) return res.status(400).json({ error: 'invalid id' });
   try {
-    const file = collectionMarkdown(id);
+    const file = await collectionMarkdown(id);
     if (!file) return res.status(404).json({ error: 'Not found' });
+    // How many went in as link only, for the toast (PR-16).
+    res.set('X-Tenwise-Link-Only', String(file.linkOnly));
     res.set('Content-Type', 'text/markdown; charset=utf-8');
     res.set('Content-Disposition', `attachment; filename="${fileNameOf(file.name)}"`);
     return res.send(file.markdown);

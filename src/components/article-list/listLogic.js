@@ -2,13 +2,14 @@ import { csvCell } from '../../../shared/csv.js';
 
 // Pure helpers for the article list: cached pages, empty-state copy, CSV.
 
-const VIEW_TITLES = { all: 'All Articles', today: 'Today', saved: 'Saved', unsorted: 'Unsorted saves' };
+const VIEW_TITLES = { all: 'All Articles', today: 'Today', saved: 'Saved', unsorted: 'To file' };
+
+// Views named by what they show: their name, else this.
+const NAMED_VIEWS = { feed: 'Feed', folder: 'Folder', collection: 'Collection', filter: 'Filter' };
 
 export function viewTitle(view) {
   if (VIEW_TITLES[view.type]) return VIEW_TITLES[view.type];
-  if (view.type === 'feed') return view.name || 'Feed';
-  if (view.type === 'folder') return view.name || 'Folder';
-  if (view.type === 'collection') return view.name || 'Collection';
+  if (NAMED_VIEWS[view.type]) return view.name || NAMED_VIEWS[view.type];
   return 'Articles';
 }
 
@@ -16,7 +17,8 @@ const EMPTY_BY_VIEW = {
   saved: { title: 'Nothing saved yet', body: 'Press b to save an article, or n to save it with a note' },
   today: { title: 'All caught up', body: 'No new articles published today' },
   collection: { title: 'Nothing in this collection yet', body: 'Press c on an article to add it here' },
-  unsorted: { title: 'All sorted', body: 'Every save is in a collection. New saves land here until you file them' },
+  unsorted: { title: 'All filed', body: 'Every save is in a collection. New saves wait here until you file them: press c on one' },
+  filter: { title: 'Nothing matches yet', body: 'Articles that match this rule show here as they arrive. Edit it from its menu in the sidebar' },
 };
 
 /** Title and body for the empty list, depending on why it is empty. */

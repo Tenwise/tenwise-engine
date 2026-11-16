@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { HiOutlineMagnifyingGlass } from 'react-icons/hi2';
 import { Input } from '@/components/ui/input';
-import { getDomain, searchCatalog } from './catalog.js';
+import { getDomain, searchCatalog, useCatalog } from './catalog.js';
 import { FeedAddButton } from './FeedAddButton.jsx';
 import { pluginsOf } from '../../plugins/index.js';
 import { FeedRow, Hint } from './parts.jsx';
@@ -25,20 +25,22 @@ function CatalogResults({ results, query, adder }) {
 
 /** Search tab: instant search of the curated catalog, then any plugin offers for the query. */
 export function SearchTab({ query, onQueryChange, onOpenTab, adder }) {
-  const results = useMemo(() => searchCatalog(query), [query]);
+  const catalog = useCatalog();
+  const results = useMemo(() => searchCatalog(query, catalog), [query, catalog]);
+  const feedCount = catalog.reduce((n, c) => n + c.feeds.length, 0);
   const hasQuery = Boolean(query.trim());
   return (
     <div className="flex flex-col gap-4">
       <Input
         icon={HiOutlineMagnifyingGlass}
-        placeholder="Search 150+ curated feeds by name, topic or category"
+        placeholder={`Search ${feedCount} curated feeds by name, topic or category`}
         aria-label="Search curated feeds"
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         // eslint-disable-next-line jsx-a11y/no-autofocus -- the field opens with its Add feed tab, so focus belongs in it
         autoFocus
       />
-      {!hasQuery && <Hint>Search <strong className="text-foreground">150+ curated feeds</strong> across 24 categories. Try “AI”, “climate”, “design”.</Hint>}
+      {!hasQuery && <Hint>Search <strong className="text-foreground">{feedCount} curated feeds</strong> across {catalog.length} categories. Try “AI”, “climate”, “design”.</Hint>}
       {hasQuery && <CatalogResults results={results} query={query} adder={adder} />}
       {hasQuery && OFFERS.map(({ id, Offer }) => <Offer key={id} query={query} openTab={onOpenTab} />)}
     </div>

@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { usePersistedChoice } from '../../app/useLayout.js';
 import { useToast } from '../../app/ToastContext.jsx';
 import { SettingsEnv } from './env.js';
+import { defaultSettingsMode } from './modes.js';
 import { searchSettings, sectionsWith, visibleIn } from './registry.js';
 import { Row, Segmented } from './ui.jsx';
 
@@ -92,7 +93,7 @@ function Header({ mode, onMode, query, onQuery, onClose }) {
  */
 export default function SettingsScreen({ isOpen, onClose, availableModels = [], section: startSection }) {
   const showToast = useToast();
-  const [mode, setMode] = usePersistedChoice(MODE_KEY, 'power');
+  const [mode, setMode] = usePersistedChoice(MODE_KEY, defaultSettingsMode());
   const [current, setCurrent] = useState(startSection || 'appearance');
   const [query, setQuery] = useState('');
   const visible = useMemo(() => visibleIn(mode), [mode]);

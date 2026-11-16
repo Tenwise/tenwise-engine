@@ -33,20 +33,28 @@ test('saving a summary needs its text; personas are stored as JSON and empty fie
   assert.equal(saved.body.ai_personas, '["analyst","skeptic"]');
   assert.equal(saved.body.ai_tone_voice, null);
   assert.equal(saved.body.article_author, null);
-  assert.equal((await api.post('/', summary({ ai_personas: 'analyst' }))).body.ai_personas, 'analyst');
-  assert.equal((await api.post('/', summary({ ai_personas: undefined }))).body.ai_personas, null);
+  assert.equal((await api.post('/', summary({ ai_personas: 'analyst', summary_text: 'One persona.' }))).body.ai_personas, 'analyst');
+  assert.equal((await api.post('/', summary({ ai_personas: undefined, summary_text: 'No persona.' }))).body.ai_personas, null);
 });
 
 test('summaries list newest first and can be deleted', async () => {
-  const older = (await api.post('/', summary({ article_title: 'Older' }))).body;
+  const older = (await api.post('/', summary({ article_title: 'Older', summary_text: 'Older.' }))).body;
   await new Promise((resolve) => { setTimeout(resolve, 5); });
-  const newer = (await api.post('/', summary({ article_title: 'Newer' }))).body;
+  const newer = (await api.post('/', summary({ article_title: 'Newer', summary_text: 'Newer.' }))).body;
   assert.deepEqual((await api.get('/')).body.slice(0, 2).map((s) => s.id), [newer.id, older.id]);
 
   assert.deepEqual((await api.delete(`/${older.id}`)).body, { ok: true });
   assert.equal((await api.delete(`/${older.id}`)).status, 404);
   assert.equal((await api.delete('/abc')).status, 400);
   assert.ok(!(await api.get('/')).body.some((s) => s.id === older.id));
+});
+
+test('?article_url= lists only that article\'s summaries (AI-14)', async () => {
+  await api.post('/', summary({ article_url: 'https://news.example/one', summary_text: 'About one.' }));
+  await api.post('/', summary({ article_url: 'https://news.example/two', summary_text: 'About two.' }));
+  const one = (await api.get(`/?article_url=${encodeURIComponent('https://news.example/one')}`)).body;
+  assert.deepEqual(one.map((s) => s.summary_text), ['About one.']);
+  assert.deepEqual((await api.get('/?article_url=https%3A%2F%2Fnews.example%2Fnone')).body, []);
 });
 
 test('the CSV export is a dated download that spreadsheets open safely', async () => {
@@ -63,4 +71,15 @@ test('the CSV export is a dated download that spreadsheets open safely', async (
 
 test('the database path is reader.db in the data directory', async () => {
   assert.deepEqual((await api.get('/db-path')).body, { path: join(dataDir, 'reader.db') });
+});
+
+test('the same summary of the same article is saved once; a new one is saved (AI-7)', async () => {
+  const text = 'Saved once, however often Save is pressed.';
+  const first = (await api.post('/', summary({ summary_text: text }))).body;
+  const again = (await api.post('/', summary({ summary_text: text }))).body;
+  assert.equal(again.id, first.id);
+  const other = (await api.post('/', summary({ summary_text: `${text} Regenerated.` }))).body;
+  assert.notEqual(other.id, first.id);
+  const elsewhere = (await api.post('/', summary({ summary_text: text, article_url: 'https://news.example/other' }))).body;
+  assert.notEqual(elsewhere.id, first.id);
 });

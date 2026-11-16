@@ -9,7 +9,7 @@ import { resolveArticleUrl } from '../plugins.js';
  */
 const EXTRACTION_TIMEOUT_MS = 15000;
 
-const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+export const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 // Extractor field -> response field, each defaulting to ''.
 const TEXT_FIELDS = {
@@ -133,8 +133,16 @@ async function articleOn(page, target) {
 // User-Agent and a real timeout), then parsed from the HTML string. A plugin
 // may first point the link elsewhere (server/plugins.js).
 // `fetchPage` is fetchText's signature (tests pass a stub).
+// `resolvedUrl` is the URL a plugin pointed the link to, else null. A failure
+// carries it too: the publisher's page may refuse us (PitchBook answers 403)
+// after the plugin has already found where the article is (BRF-23).
 export async function extractArticle(url, fetchPage = fetchText) {
   const target = await articleUrl(url, fetchPage);
-  const page = await fetchArticlePage(target, fetchPage);
-  return toExtracted(await articleOn(page, target), url);
+  const resolvedUrl = target !== url ? target : null;
+  try {
+    const page = await fetchArticlePage(target, fetchPage);
+    return { ...toExtracted(await articleOn(page, target), url), resolvedUrl };
+  } catch (error) {
+    throw Object.assign(error, { resolvedUrl });
+  }
 }

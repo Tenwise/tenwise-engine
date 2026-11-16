@@ -1,21 +1,24 @@
 // The settings screen, as data: its sections, and every setting in them with
 // the control that edits it. SettingsScreen renders this list, so a new
 // setting is one entry here. level 'simple' settings show in both modes;
-// 'power' ones only in Power mode. Plugins add whole sections (the
+// 'power' ones only in Power mode; one with a `capability` only where that
+// capability is on (modes.js). Plugins add whole sections (the
 // `settingsSections` slot, src/plugins/index.js) and settings in the app's
 // sections (the `settings` slot), after the app's own.
 import {
   HiOutlineBookOpen, HiOutlineCircleStack, HiOutlineCommandLine, HiOutlineCpuChip, HiOutlineInformationCircle,
   HiOutlineSwatch,
 } from 'react-icons/hi2';
-import { pluginsOf } from '../../plugins/index.js';
+import { capability, pluginsOf } from '../../plugins/index.js';
 import { AccentControl, FontControl, TextColorControl, ThemeControl } from './appearance.jsx';
 import { EngineControl } from './engines.jsx';
-import { ClearAllControl, ExportOPMLControl, ImportOPMLControl, SettingsFileControl } from './data.jsx';
+import { ClearAllControl, ExportNotesControl, ExportOPMLControl, ImportOPMLControl, SettingsFileControl } from './data.jsx';
 import { LimitsEditor, PromptsEditor } from './prompts.jsx';
 import {
   AutoRefreshControl, ContentWidthControl, LineHeightControl, ReaderFontControl, ReaderSizeControl, ViewModeControl,
 } from './reading.jsx';
+import { RulesControl } from './RulesControl.jsx';
+import { offered } from './modes.js';
 
 // Each plugin section goes right after the section it names in `after`.
 const PLUGIN_SECTIONS = pluginsOf('settingsSections');
@@ -42,21 +45,23 @@ export const SETTINGS = [
   { id: 'accent', section: 'appearance', level: S, label: 'Accent color', Control: AccentControl },
   { id: 'text-color', section: 'appearance', level: P, label: 'Text color', Control: TextColorControl },
 
-  { id: 'view-mode', section: 'reading', level: S, label: 'List view', hint: 'Rows is the dense default; Grid, List and Compact are alternatives.', Control: ViewModeControl },
+  { id: 'view-mode', section: 'reading', level: S, label: 'List view', hint: 'Rows (the default) is two lines each under day headings, with a small picture; Compact is one line each, the densest; Grid shows big pictures.', Control: ViewModeControl },
   { id: 'reader-size', section: 'reading', level: S, label: 'Reader text size', hint: 'Also in the reader’s Aa menu.', Control: ReaderSizeControl },
   { id: 'reader-font', section: 'reading', level: P, label: 'Reader font', Control: ReaderFontControl },
   { id: 'line-height', section: 'reading', level: P, label: 'Line spacing', Control: LineHeightControl },
   { id: 'content-width', section: 'reading', level: P, label: 'Reading column width', Control: ContentWidthControl },
   { id: 'auto-refresh', section: 'reading', level: S, label: 'Auto-refresh feeds', Control: AutoRefreshControl },
+  { id: 'rules', section: 'reading', level: S, label: 'Mute and alert rules', hint: 'Hide articles about things you never want to read, and mark the ones you never want to miss. Words match whole words, in the title or summary.', stacked: true, Control: RulesControl },
 
-  { id: 'engines', section: 'engines', level: S, label: 'Engines', hint: 'Gemini Nano runs inside Chrome; Ollama runs larger models on your machine.', stacked: true, Control: EngineControl },
+  { id: 'engines', section: 'engines', level: S, label: 'Engines', hint: capability('ollama') ? 'Gemini Nano runs inside Chrome; Ollama runs larger models on your machine. Auto uses a model you set up first, else Gemini Nano.' : 'Auto uses a model you set up first (your own key, or the app’s), else Gemini Nano, which runs inside Chrome, on your device.', stacked: true, Control: EngineControl },
 
   { id: 'prompts', section: 'prompts', level: P, label: 'Prompts', hint: 'Every instruction the app sends to the model. Edits apply immediately; reset returns a prompt to its default.', stacked: true, Control: PromptsEditor },
   { id: 'limits', section: 'prompts', level: P, label: 'Text sent to the model (characters)', hint: 'More text gives the model more to work with, but is slower; Gemini Nano shortens anything that doesn’t fit.', stacked: true, Control: LimitsEditor },
 
+  { id: 'export-notes', section: 'data', level: S, label: 'Export your saves and notes', hint: 'Every save with its link, citation, your note and your highlights: Markdown for Obsidian or Notion, HTML for OneNote or Word.', Control: ExportNotesControl },
   { id: 'export-opml', section: 'data', level: S, label: 'Export feeds and folders', hint: 'As OPML, for another reader or a backup.', Control: ExportOPMLControl },
-  { id: 'import-opml', section: 'data', level: S, label: 'Import feeds', hint: 'From an OPML file.', Control: ImportOPMLControl },
-  { id: 'settings-file', section: 'data', level: P, label: 'Settings file', hint: 'Plain JSON beside your databases: back it up, edit it, or copy it to another machine.', stacked: true, Control: SettingsFileControl },
+  { id: 'import-opml', section: 'data', level: S, label: 'Import feeds', hint: 'From an OPML file, with your folders. From Feedly: Organize → Export OPML. Feeds already here are skipped.', Control: ImportOPMLControl },
+  { id: 'settings-file', section: 'data', level: P, capability: 'settingsFile', label: 'Settings file', hint: 'Plain JSON beside your databases: back it up, edit it, or copy it to another machine.', stacked: true, Control: SettingsFileControl },
   { id: 'clear-all', section: 'data', level: S, label: 'Delete all feeds, articles and folders', hint: 'Your saves and their notes are deleted too, and collections are emptied. The AI Summaries library, highlights and anything you made from your articles are kept.', Control: ClearAllControl },
 
   { id: 'about', section: 'about', level: S, label: 'Tenwise', hint: 'Fast scanning, calm reading, and cited AI summaries of the sources that matter to you. A product of CodeStrata, Inc.' },
@@ -64,8 +69,8 @@ export const SETTINGS = [
   ...PLUGIN_SECTIONS.flatMap((p) => p.settings.map((setting) => ({ ...setting, section: p.id }))),
 ];
 
-/** The settings shown in a mode: Simple shows only 'simple' ones, Power shows all. */
-export const visibleIn = (mode) => (mode === 'simple' ? SETTINGS.filter((s) => s.level === S) : SETTINGS);
+/** The settings shown in a mode: Simple shows only 'simple' ones, Power shows all this deployment offers. */
+export const visibleIn = (mode) => SETTINGS.filter((s) => offered(s) && (mode !== 'simple' || s.level === S));
 
 /** Sections that have at least one of the given settings. */
 export const sectionsWith = (settings) => SECTIONS.filter((sec) => settings.some((s) => s.section === sec.id));

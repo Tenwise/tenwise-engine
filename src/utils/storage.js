@@ -40,3 +40,11 @@ export function writeStored(key, value, storage = globalThis.localStorage) {
   } catch { /* storage full or blocked: the preference just isn't remembered */ }
   if (storage === globalThis.localStorage) writeListeners.forEach((fn) => fn(key, String(value)));
 }
+
+/** Removes a key; like writeStored, it tells the write listeners (with value null). */
+export function removeStored(key, storage = globalThis.localStorage) {
+  try {
+    storage.removeItem(key);
+  } catch { /* storage blocked: nothing to remove */ }
+  if (storage === globalThis.localStorage) writeListeners.forEach((fn) => fn(key, null));
+}

@@ -68,3 +68,27 @@ test('the CSV export is a dated download that spreadsheets open safely', async (
 test('the database path is reader.db in the data directory', async () => {
   assert.deepEqual((await api.get('/db-path')).body, { path: join(dataDir, 'reader.db') });
 });
+
+test('a highlight saves its article, once, and the article counts its highlights (PR-7)', async () => {
+  const reader = await import('../db/reader.js');
+  const { getArticlePage } = await import('../db/articlePages.js');
+  const { getArticleById } = reader;
+  const feed = reader.createFeed({ title: 'News', url: 'https://news.example/feed' });
+  const link = 'https://news.example/saved-by-highlight';
+  reader.bulkInsertArticles(feed.id, [{ guid: 'g-pr7', title: 'Saved by a highlight', link, summary: '', content: '', publishedAt: '2026-10-29T08:00:00Z' }]);
+  const { id } = getArticlePage('feed', feed.id).articles[0];
+  assert.equal(getArticleById(id).isBookmarked, 0);
+  const first = (await api.post('/', { highlighted_text: 'This mattered.', article_url: link, article_id: id })).body;
+  assert.equal(first.article_saved, true);
+  const article = getArticleById(id);
+  assert.equal(article.isBookmarked, 1);
+  assert.ok(article.savedAt);
+  assert.equal(article.highlightCount, 1);
+  await pause();
+  const second = (await api.post('/', { highlighted_text: 'So did this.', article_url: link, article_id: id })).body;
+  assert.equal(second.article_saved, false, 'already saved');
+  assert.equal(getArticleById(id).savedAt, article.savedAt, 'the first saved time is kept');
+  assert.equal(getArticleById(id).highlightCount, 2);
+  assert.equal(getArticlePage('saved').articles.find((x) => x.id === id).highlightCount, 2, 'in the Saved list too');
+  assert.equal((await api.post('/', { highlighted_text: 'No article', article_id: 'x' })).body.article_saved, false);
+});

@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { on } from '../lib/appEvents.js';
 import { readStored, readStoredNumber, writeStored } from '../utils/storage.js';
 
 const SIDEBAR_MIN = 180;
@@ -10,6 +11,11 @@ const NEXT_SIDEBAR_MODE = { expanded: 'hidden', hidden: 'expanded' };
 const sidebarModeFrom = (stored) => (stored === 'expanded' ? 'expanded' : 'hidden');
 
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+
+// A phone: the sidebar is a drawer over the list (base.css), so it starts
+// closed and closes once something in it is chosen (CON-4).
+export const PHONE_QUERY = '(max-width: 768px)';
+export const isPhone = () => typeof window !== 'undefined' && Boolean(window.matchMedia?.(PHONE_QUERY).matches);
 
 // A width persisted to localStorage, resized by drag deltas within [min, max].
 export function usePersistedWidth(key, { fallback, min, max, direction = 1 }) {
@@ -47,7 +53,7 @@ export function usePersistedToggle(key, fallback = false) {
  * whether the article list is hidden (giving the reader the whole width).
  */
 export function useLayout() {
-  const [sidebarMode, setSidebarMode] = useState(() => sidebarModeFrom(readStored('tenwise-sidebar-mode', 'expanded')));
+  const [sidebarMode, setSidebarMode] = useState(() => (isPhone() ? 'hidden' : sidebarModeFrom(readStored('tenwise-sidebar-mode', 'expanded'))));
   const [sidebarWidth, resizeSidebar] = usePersistedWidth('tenwise-sidebar-width', { fallback: 260, min: SIDEBAR_MIN, max: SIDEBAR_MAX });
   const [readerWidth, resizeReader] = usePersistedWidth('tenwise-reader-width', { fallback: 600, min: READER_MIN, max: READER_MAX, direction: -1 });
 
@@ -59,6 +65,12 @@ export function useLayout() {
     return next;
   }), []);
 
+  // The guided tour shows the sidebar to point into it ('show-sidebar'; not remembered).
+  useEffect(() => on('show-sidebar', () => setSidebarMode('expanded')), []);
+
+  // On a phone, after choosing a view: the drawer closes (not remembered, so a computer keeps its choice).
+  const closeSidebarOnPhone = useCallback(() => { if (isPhone()) setSidebarMode('hidden'); }, []);
+
   const effectiveSidebarWidth = sidebarMode === 'hidden' ? 0 : sidebarWidth;
-  return { sidebarMode, toggleSidebarMode, effectiveSidebarWidth, resizeSidebar, readerWidth, resizeReader, listHidden, toggleList };
+  return { sidebarMode, toggleSidebarMode, closeSidebarOnPhone, effectiveSidebarWidth, resizeSidebar, readerWidth, resizeReader, listHidden, toggleList };
 }

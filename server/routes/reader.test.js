@@ -201,6 +201,21 @@ test('marking a view read updates the unread counts', async () => {
   assert.equal((await api.post('/articles/mark-view-read', {})).status, 200, 'no view means all');
 });
 
+test('a feed by one author: the page, marking read, and the feed\'s authors', async () => {
+  const feed = await newFeed();
+  await addArticles(feed.id, 3, (i) => ({ author: i === 1 ? 'Other Letter' : 'The Letter' }));
+  const page = (await api.get(`/articles/page?view=feed&id=${feed.id}&author=${encodeURIComponent('The Letter')}`)).body;
+  assert.deepEqual([page.total, page.unread], [2, 2]);
+  assert.deepEqual((await api.get(`/feeds/${feed.id}/authors`)).body, [
+    { author: 'The Letter', total: 2, unread: 2 },
+    { author: 'Other Letter', total: 1, unread: 1 },
+  ]);
+  assert.deepEqual((await api.post('/articles/mark-view-read', { view: 'feed', id: feed.id, author: 'Other Letter' })).body, { changed: 1 });
+  assert.equal((await api.get('/articles/counts')).body.unreadByFeed[feed.id], 2);
+  assert.equal((await api.get('/feeds/abc/authors')).status, 400);
+  assert.deepEqual((await api.get('/feeds/999999/authors')).body, []);
+});
+
 test('the AI queue: queue count, claims and reset', async () => {
   const feed = await newFeed();
   const [newest, , oldest] = await addArticles(feed.id, 3);

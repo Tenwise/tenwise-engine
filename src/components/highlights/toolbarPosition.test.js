@@ -16,3 +16,7 @@ test('clamps horizontally inside the panel', () => {
 test('falls below the selection near the panel top', () => {
   assert.equal(toolbarPosition({ left: 400, width: 100, top: 80, bottom: 100 }, container).top, 108);
 });
+
+test('on a touch screen, below the selection, clear of the phone\'s own menu', () => {
+  assert.deepEqual(toolbarPosition({ left: 400, width: 100, top: 300, bottom: 320 }, container, { touch: true }), { left: 345, top: 348 });
+});

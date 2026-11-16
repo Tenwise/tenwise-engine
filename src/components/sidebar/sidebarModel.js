@@ -35,6 +35,12 @@ export const menuOpener = (openMenu, type, id) => (e) => {
 
 export const isActive = (activeView, type, id) => activeView.type === type && (id === undefined || activeView.id === id);
 
+/** Plugins' sidebar sections (src/plugins/index.js), fixed when the bundle loads. */
+export const SIDEBAR_SECTIONS = pluginsOf('sidebarSections');
+
+/** The feeds Folders lists: all but those a sidebar section shows instead. */
+export const feedsInFolders = (feeds, sections = SIDEBAR_SECTIONS) => feeds.filter((f) => !sections.some((s) => s.hidesFeed?.(f)));
+
 /** Feeds grouped by folder id, plus the uncategorized ones. */
 export function groupFeeds(feeds) {
   const byFolder = {};
@@ -68,3 +74,6 @@ export function useSidebarCounts(refreshKey, librarySummaryCount) {
 
   return { ...counts, ...pluginCounts, library: librarySummaryCount };
 }
+
+/** Whether To file (saves in no collection) is worth showing: only once there's a collection to file into (UX-10). */
+export const showToFile = (collectionCount) => collectionCount > 0;

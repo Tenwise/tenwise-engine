@@ -6,6 +6,7 @@ import {
   bulkInsertArticles, bulkUpdateArticles, getQueueCount, getUnprocessedForFeed, updateFeed,
 } from '../db/reader.js';
 import { readSettings } from '../settings.js';
+import { isLocalFeed } from '../db/savedPages.js';
 import { firstOf, toArticle } from '../../shared/feedItems.js';
 import { batchSlots, parseBatchSettings } from '../../shared/batchScope.js';
 
@@ -35,6 +36,8 @@ function recordFailure(feed, error) {
  * { inserted, failed, feed } with the updated feed.
  */
 export async function refreshFeed(feed, parse = parseFeed) {
+  // Tenwise's own feeds (Saved pages, BRF-08) have nothing on the web to fetch.
+  if (isLocalFeed(feed)) return { inserted: 0, failed: false, feed };
   try {
     const data = await parse(feed.url);
     const inserted = bulkInsertArticles(feed.id, firstOf(data.items, []).map(toArticle));
@@ -65,12 +68,17 @@ export function tallyRefreshes(tally, results, chunk) {
   return tally;
 }
 
-/** Refreshes feeds a few at a time; resolves to { inserted, failed: [feed titles] }. */
-export async function refreshFeeds(feeds, refresh = refreshFeed) {
+/**
+ * Refreshes feeds a few at a time; resolves to { inserted, failed: [feed titles] }.
+ * onProgress({ done, total }) hears how many are done, at the start and after each few.
+ */
+export async function refreshFeeds(feeds, refresh = refreshFeed, onProgress = () => {}) {
   const tally = { inserted: 0, failed: [] };
+  onProgress({ done: 0, total: feeds.length });
   for (let i = 0; i < feeds.length; i += CONCURRENCY) {
     const chunk = feeds.slice(i, i + CONCURRENCY);
     tallyRefreshes(tally, await Promise.allSettled(chunk.map((f) => refresh(f))), chunk);
+    onProgress({ done: Math.min(i + CONCURRENCY, feeds.length), total: feeds.length });
   }
   return tally;
 }

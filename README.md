@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Tenwise/tenwise-engine/tags"><img src="https://img.shields.io/badge/version-0.1.3-f59e0b" alt="Version 0.1.3"></a>
+  <a href="https://github.com/Tenwise/tenwise-engine/tags"><img src="https://img.shields.io/badge/version-0.2.0-f59e0b" alt="Version 0.2.0"></a>
   <a href="#license"><img src="https://img.shields.io/badge/license-AGPL--3.0--only-14213d" alt="License: AGPL-3.0-only"></a>
   <img src="https://img.shields.io/badge/AI-on--device%20%C2%B7%20Gemini%20Nano%20%7C%20Ollama-14213d" alt="On-device AI: Gemini Nano or Ollama">
   <img src="https://img.shields.io/badge/node-22.19%2B%20%7C%2024%2B-14213d" alt="Node 22.19+ or 24+">
@@ -16,6 +16,7 @@
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
+  <a href="docs/RUN-LOCALLY.md">Run it locally</a> ·
   <a href="https://tenwise.app/docs/">User guide</a> ·
   <a href="#the-engine-and-the-tenwise-app">Engine or app?</a> ·
   <a href="https://tenwise.app">tenwise.app</a> ·
@@ -72,6 +73,8 @@ The [user guide](https://tenwise.app/docs/) covers both. Features it marks **Ten
 
 **You need:** Node.js 22.19+ or 24+ (24 LTS recommended; with nvm, run `nvm install` in the folder), and desktop Google Chrome 148+ for the built-in Gemini Nano AI. Ollama is optional.
 
+[Run the engine locally](docs/RUN-LOCALLY.md) goes through it step by step: prerequisites, configuration, where your data lives, opening a library downloaded from Tenwise, updating, and finding out which version you're running.
+
 ```bash
 git clone https://github.com/Tenwise/tenwise-engine.git
 cd tenwise-engine
@@ -115,12 +118,15 @@ The service listens on `127.0.0.1` only and is not reachable from other devices.
 
 | Feature | Details |
 |---------|---------|
-| **Four list views** | **Rows** (default: dense two-line rows with day headings), Grid, List and Compact. Switch in the list header, in **Settings → Reading**, or with ⌘K |
+| **Three list views** | **Rows** (default: two-line rows under day headings, with a small picture), **Compact** (one line per article, the densest) and **Grid** (big pictures). Switch in the list header, in **Settings → Reading**, or with ⌘K |
 | **Docked reader** | A third pane on wide windows (1100 px and up); on narrower ones it slides over the list. Hide the sidebar with `[` and the list with `]` for more room |
 | **Full text, automatically** | The full article is extracted from the source when you open it; the reader shows whether you're reading the full article or the feed's text, and says why when it's the feed's text |
 | **Reading comfort** | Newsreader serif by default, with font, size, spacing and width in the **Aa** menu; a progress bar; focus mode (`f`); your scroll position is remembered |
 | **In brief** | When an article has an AI summary, it appears at the top of the reader |
-| **Highlights** | Select text to highlight it in one of four colours; browse and search them all in **Highlights**, and export as CSV |
+| **Highlights** | Select text to highlight it in one of four colours; highlighting an article also saves it. Browse and search them all in **Highlights**, and export as CSV |
+| **Rule filters** | Under **Filters** in the sidebar, **+** keeps a view of the articles that match a rule: words and "phrases" with `AND`, `OR`, `NOT` and brackets, in titles only or in the full text, optionally in one folder |
+| **Unread or read** | **Filters** in the list header shows only unread or only read articles, in any view |
+| **Mute and alert** | In **Settings → Reading**, muted words or feeds hide matching articles everywhere (your saves stay); alert words mark matching articles in the list |
 | **Command palette** | ⌘K / Ctrl+K: go to any view, folder or feed, run commands (add feed, refresh, theme, panes, list view), or search articles |
 | **Share** | LinkedIn, X, email, your system's share sheet, or copy the link |
 
@@ -130,12 +136,14 @@ The service listens on `127.0.0.1` only and is not reachable from other devices.
 |---------|---------|
 | **Save with a note** | `b` saves an article; `n` saves it and opens a note on why it caught your eye. Saved lists your saves newest first under "today", "yesterday", "this week" and "earlier", with each note in place of the preview |
 | **Collections** | `c` opens the collection picker: add the article to one or more collections, or type a name to create one. Adding an article saves it; unsaving removes it from every collection. Rename or delete from the sidebar (deleting a collection keeps its saves) |
-| **Unsorted** | Saves that aren't in any collection yet: a filing queue. Press `c` to file one, and `j` moves on to the next |
-| **Download a collection** | **Download Markdown** saves a collection's articles as one file (title, source, dates, APA citation, your note and the text of each), ready for any notes or research tool |
+| **To file** | Saves that aren't in any collection yet: a filing queue. Press `c` to file one, and `j` moves on to the next |
+| **Save a page from a link** | ⌘K → **Save a page from a link** reads a page that isn't in your feeds and keeps it like a saved article, with a note and a collection. **Copy the bookmark** in that dialog makes a Save to Tenwise bookmark for any page |
+| **Download a collection** | **Download Markdown** saves a collection's articles as one file (title, source, dates, APA citation, your note, your highlights and the text of each), ready for any notes or research tool |
+| **Export your saves and notes** | **Settings → Data** gives every save (or **Export notes** on a collection, its saves) with its link, citation, your note and your highlights: Markdown for Obsidian or Notion, HTML for OneNote or Word |
 | **APA citations** | Every saved article carries an APA 7 citation: under your note in the reader, on each saved summary, and behind a copy button on saved rows (hover). A collection's **Copy citations** copies them all as a reference list, A to Z. Copies paste into a word processor with their italics. arXiv papers are cited as preprints with their arXiv ID; missing authors and dates follow APA's rules |
 | **Folders** | Group feeds into folders; right-click a feed to refresh it, move it or remove it |
 | **Search** | Full-text search over everything you've fetched, ranked title › source › AI topics › body. Words match as prefixes; "quoted phrases" match exactly. Press `/` |
-| **Filters** | The **Filters** button can show only the articles that have an AI summary or analysis |
+| **AI filter** | The **Filters** button can also show only the articles that have an AI summary or analysis |
 | **Removing a feed keeps your saves** | Its other articles go, but saved ones stay in Saved and your collections with their notes. Subscribe again and they rejoin the feed |
 
 ### AI, on your device
@@ -251,6 +259,7 @@ Installed models appear in the model picker automatically. Models that reason be
 - **Private by design.** Feeds are fetched directly from their publishers; site icons are fetched and cached by your local server, not a third party; AI runs on your device. Nothing is sent to a Tenwise server: the engine doesn't talk to one.
 - **Shared across browsers.** Data lives on disk, not in the browser, so every browser on the machine sees the same library.
 - **Backup.** Copy the `data/` folder (set `TENWISE_DATA_DIR` to keep it elsewhere). For just your feed list, use **Settings → Data → Export feeds and folders**.
+- **Coming from the Tenwise app?** A library from **Download your library** opens here as `data/reader.db`: see [Run the engine locally](docs/RUN-LOCALLY.md#open-a-library-downloaded-from-tenwise).
 
 ---
 

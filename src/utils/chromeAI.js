@@ -4,13 +4,17 @@
  * https://developer.chrome.com/docs/ai/prompt-api
  */
 
+import { capability } from '../plugins/index.js';
+
 export const NANO_MODEL_NAME = 'gemini-nano';
 
 // Plain Chromium ships a stub LanguageModel that reports itself available but
 // just echoes the prompt back, prefixed with this message.
 const CHROMIUM_STUB_PREFIX = 'On-device model is not available';
 const NOT_CHROME_ERROR = 'Gemini Nano needs Google Chrome (desktop, 148+). This browser exposes the API but has no on-device model.';
-const TOO_LONG_ERROR = 'This request is too long for Gemini Nano. Select fewer articles, or switch to an Ollama model in Settings → AI engines.';
+const tooLongMessage = () => (capability('ollama')
+  ? 'This request is too long for Gemini Nano. Select fewer articles, or switch to an Ollama model in Settings → AI engines.'
+  : 'This request is too long for Gemini Nano. Select fewer articles.');
 
 // Room left in the context window for the model's answer.
 const OUTPUT_RESERVE_TOKENS = 1536;
@@ -116,7 +120,7 @@ export async function fitToNanoContext(systemContent, buildUserMessage, { maxCha
   try {
     const budget = contextBudget(session);
     if (budget === null) return { chars: maxChars, trimmed: false };
-    if (budget <= 0) throw new Error(TOO_LONG_ERROR);
+    if (budget <= 0) throw new Error(tooLongMessage());
     const chars = await shrinkToBudget(tokenCounter(session), buildUserMessage, { budget, maxChars, minChars });
     return { chars, trimmed: chars < maxChars };
   } finally {
@@ -147,7 +151,7 @@ async function shrinkToBudget(countTokens, buildUserMessage, { budget, maxChars,
     if (chars <= minChars) break;
     chars = Math.max(minChars, Math.floor(chars * (budget / tokens) * 0.9));
   }
-  throw new Error(TOO_LONG_ERROR);
+  throw new Error(tooLongMessage());
 }
 
 function isQuotaError(err) {
@@ -155,7 +159,7 @@ function isQuotaError(err) {
 }
 
 function tooLongError(cause) {
-  return new Error(TOO_LONG_ERROR, { cause });
+  return new Error(tooLongMessage(), { cause });
 }
 
 // Keeps only the system prompt, halved — a last attempt when the history

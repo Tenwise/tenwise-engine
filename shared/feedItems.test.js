@@ -23,7 +23,7 @@ test('toArticle fills defaults and canonicalizes the link', () => {
   const a = toArticle({ title: 'T', link: 'https://e.com/a?utm_source=x', guid: 'g', publishedAt: '2026-01-01' });
   assert.deepEqual(
     { ...a, canonicalLink: undefined },
-    { content: '', summary: '', author: '', imageUrl: '', guid: 'g', canonicalLink: undefined, title: 'T', link: 'https://e.com/a?utm_source=x', publishedAt: '2026-01-01' },
+    { content: '', summary: '', author: '', imageUrl: '', sourceTitle: '', guid: 'g', canonicalLink: undefined, title: 'T', link: 'https://e.com/a?utm_source=x', publishedAt: '2026-01-01' },
   );
   assert.ok(a.canonicalLink.startsWith('https://e.com/a'));
   const bare = toArticle({ title: 'U', link: 'https://e.com/b' });

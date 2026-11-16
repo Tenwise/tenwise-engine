@@ -234,4 +234,52 @@ export const MIGRATIONS = [
     description: 'A removed feed with saved articles is kept, hidden, so its saves keep their source',
     up: (db) => db.exec('ALTER TABLE feeds ADD COLUMN removed_at TEXT'),
   },
+  {
+    version: 13,
+    description: 'Briefs: a recurring brief set up on a collection (its audience, question, cadence and structure), one per collection',
+    up: (db) => db.exec(`
+      CREATE TABLE briefs (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        collection_id INTEGER NOT NULL UNIQUE REFERENCES collections(id) ON DELETE CASCADE,
+        title         TEXT,
+        audience      TEXT,
+        objective     TEXT,
+        question      TEXT,
+        cadence       TEXT,
+        structure     TEXT,
+        length        TEXT,
+        created_at    TEXT NOT NULL,
+        updated_at    TEXT NOT NULL
+      );
+    `),
+  },
+  {
+    version: 14,
+    description: "A Studio item's evidence check: each claim, its source passage and its status (BRF-03), as JSON",
+    up: (db) => db.exec('ALTER TABLE studio_items ADD COLUMN evidence TEXT'),
+  },
+  {
+    version: 15,
+    description: 'Approved versions of a brief (BRF-04): a fixed copy of its text, sources and evidence at approval; later edits never change it',
+    up: (db) => db.exec(`
+      CREATE TABLE brief_versions (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        studio_item_id INTEGER REFERENCES studio_items(id) ON DELETE SET NULL,
+        title          TEXT NOT NULL,
+        body_md        TEXT NOT NULL,
+        sources        TEXT NOT NULL,
+        evidence       TEXT,
+        approved_at    TEXT NOT NULL
+      );
+      CREATE INDEX idx_brief_versions_item ON brief_versions(studio_item_id);
+    `),
+  },
+  {
+    version: 16,
+    description: "The publication an item names as its source (RSS <source>, as Google News's items do), and the publisher's URL once a link to an aggregator is resolved (BRF-23), for citations",
+    up: (db) => db.exec(`
+      ALTER TABLE articles ADD COLUMN source_title TEXT;
+      ALTER TABLE articles ADD COLUMN resolved_link TEXT;
+    `),
+  },
 ];

@@ -86,7 +86,8 @@ function groupByFolder(feeds, folders) {
 }
 
 export function generateOPML(feeds, folders) {
-  const { byFolder, uncategorized } = groupByFolder(feeds, folders);
+  // Only feeds on the web: Tenwise's own (Saved pages, BRF-08) mean nothing to another reader.
+  const { byFolder, uncategorized } = groupByFolder(feeds.filter((f) => safeHttpUrl(f.url)), folders);
   const ordered = [...folders].sort((a, b) => a.id - b.id);
   const folderXml = ordered
     .filter((f) => byFolder.get(f.id).length > 0)

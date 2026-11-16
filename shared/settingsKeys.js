@@ -19,6 +19,9 @@ export const SYNCED_SETTING_KEYS = [
   'tenwise-batch-ai',
   'tenwise-prompts',            // edited prompt texts, by prompt id
   'tenwise-ai-limits',          // edited AI size limits
+  'tenwise-rules',              // mute and alert rules (shared/rules.js)
+  'tenwise-rule-filters',       // saved rule filters (shared/ruleFilters.js)
+  'tenwise-release-seen',       // the release notes last seen in What's new (GRO-25)
 ];
 
 const SYNCED = new Set(SYNCED_SETTING_KEYS);

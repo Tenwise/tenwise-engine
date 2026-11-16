@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { emit, on } from '../lib/appEvents.js';
 import * as api from '../utils/api.js';
 import { createFeed, importNewFeeds } from '../utils/feedSync.js';
 
@@ -49,26 +50,30 @@ function useFeedRefresh({ feeds, replaceFeed, reloadFeeds, onDataChanged }) {
 
 // OPML import; reloads the feed list, then has the server fetch articles for
 // the new feeds in the background.
-function useOPMLImport({ feeds, setFeeds, reloadFeeds, onDataChanged }) {
+function useOPMLImport({ feeds, setFeeds, onDataChanged }) {
   return useCallback(async (parsedFeeds) => {
     const imported = await importNewFeeds(parsedFeeds, feeds);
     if (imported.length === 0) return 0;
     setFeeds(await api.fetchFeeds().catch(() => [...feeds, ...imported]));
     onDataChanged?.();
+    // The server fetches them in the background (OPS-19); the refresh watcher
+    // shows it running and reloads the lists when it's done.
     api.refreshFeeds(imported.map((f) => f.id))
-      .then(({ inserted }) => {
-        reloadFeeds();
-        if (inserted > 0) onDataChanged?.();
-      })
+      .then(() => emit('refresh-started'))
       .catch(() => {});
     return imported.length;
-  }, [feeds, setFeeds, reloadFeeds, onDataChanged]);
+  }, [feeds, setFeeds, onDataChanged]);
 }
 
 export function useFeeds(onDataChanged) {
   const { feeds, setFeeds, replaceFeed, reloadFeeds } = useFeedList();
+  // A plugin added feeds or articles through the API (the hosted app's starter feeds).
+  useEffect(() => on('feeds-changed', () => {
+    reloadFeeds();
+    onDataChanged?.();
+  }), [reloadFeeds, onDataChanged]);
   const refresh = useFeedRefresh({ feeds, replaceFeed, reloadFeeds, onDataChanged });
-  const importFeedsFromOPML = useOPMLImport({ feeds, setFeeds, reloadFeeds, onDataChanged });
+  const importFeedsFromOPML = useOPMLImport({ feeds, setFeeds, onDataChanged });
 
   const addFeed = useCallback(async (feedUrl, folderId = null) => {
     if (feeds.some((f) => f.url === feedUrl)) throw new Error('This feed is already added');

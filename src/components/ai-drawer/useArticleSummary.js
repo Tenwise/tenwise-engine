@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
-import { patchArticle, saveSummary } from '../../utils/api.js';
-import { streamTokens, summaryMessages } from '../../ai/tasks.js';
+import { useCallback, useEffect, useState } from 'react';
+import { fetchArticleSummaries, patchArticle, saveSummary } from '../../utils/api.js';
+import { streamSummaryTokens, summaryMessages } from '../../ai/tasks.js';
 import { voiceRecord } from '../../ai/voice.js';
 import { useStreamRun, whileCurrent } from '../../hooks/useStreamRun.js';
 import { useArticleFieldSync } from './useArticleFieldSync.js';
@@ -24,6 +24,26 @@ function summaryRecord(article = {}, feedTitle, summary, model) {
   };
 }
 
+/** Whether the summary on screen is one already saved: the texts saved, as a list. */
+export const isSaved = (savedTexts, summary) => Boolean(summary) && savedTexts.includes(summary);
+
+// The texts already in AI Summaries for this article, so coming back to it
+// shows Saved (AI-14). Best effort: on a failure Save stays, and saving the
+// same text again changes nothing (AI-7).
+function useSavedTexts(link) {
+  const [saved, setSaved] = useState({ link, texts: [] });
+  const textsOf = (s) => (s.link === link ? s.texts : []);
+  const add = useCallback((...texts) => setSaved((s) => ({ link, texts: [...new Set([...(s.link === link ? s.texts : []), ...texts])] })), [link]);
+  useEffect(() => {
+    if (!link) return undefined;
+    let current = true;
+    const keep = (rows) => current && add(...rows.map((r) => r.summary_text));
+    fetchArticleSummaries(link).then(keep).catch(() => {});
+    return () => { current = false; };
+  }, [link, add]);
+  return [textsOf(saved), add];
+}
+
 const copyWithLink = (summary, link) => navigator.clipboard.writeText(`${summary}\n\nRead more: ${link || ''}`);
 
 // The article's stored summary, and whether background batch processing wrote
@@ -35,7 +55,7 @@ const canGenerate = (article, model) => Boolean(article && model);
 const storeManualSummary = (id, summary) => patchArticle(id, { aiSummary: summary, aiSummarySource: 'manual' }).catch(() => {});
 
 /** Summary text: generated on demand, or a background batch summary as it lands. */
-function useSummaryGeneration({ article, extractedContent, model, onArticleChange }) {
+function useSummaryGeneration({ article, extractedContent, model }) {
   const [text, setText] = useState(() => fromArticle(article));
   const [summarizing, setSummarizing] = useState(false);
   const [error, setError] = useState(null);
@@ -47,7 +67,6 @@ function useSummaryGeneration({ article, extractedContent, model, onArticleChang
       setText(fromArticle(article));
       setError(null);
       setSummarizing(false);
-      onArticleChange();
     },
     onFieldChange: (stored) => stored && !summarizing && setText(fromArticle(article)),
   });
@@ -64,7 +83,7 @@ function useSummaryGeneration({ article, extractedContent, model, onArticleChang
     let full = '';
     const collect = (token) => { full += token; appendToken(token); };
     try {
-      await streamTokens(model, messages, whileCurrent(signal, collect), signal);
+      await streamSummaryTokens(model, messages, whileCurrent(signal, collect), signal);
       // A finished summary is stored as the reader's own, so the batch keeps it.
       if (!signal.aborted && full.trim()) await storeManualSummary(article.id, full);
     } catch (err) {
@@ -85,9 +104,13 @@ function useSummaryGeneration({ article, extractedContent, model, onArticleChang
 export function useArticleSummary({ article, extractedContent, model, feedTitle, onSummarySaved }) {
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const generation = useSummaryGeneration({ article, extractedContent, model, onArticleChange: () => setSaved(false) });
+  // The texts saved for this article: Saved means this summary is in the
+  // library, so a regenerated one can be saved, and the same one isn't saved
+  // again (AI-7), also after coming back to the article (AI-14).
+  const [savedTexts, addSaved] = useSavedTexts(article?.link);
+  const generation = useSummaryGeneration({ article, extractedContent, model });
   const { summary } = generation;
+  const saved = isSaved(savedTexts, summary);
 
   const copy = useCallback(() => {
     if (!summary) return;
@@ -98,19 +121,18 @@ export function useArticleSummary({ article, extractedContent, model, feedTitle,
   }, [summary, article]);
 
   const save = useCallback(async () => {
-    if (saving) return;
-    if (!summary) return;
+    if (saving || !summary || saved) return;
     setSaving(true);
     try {
       await saveSummary(summaryRecord(article ?? undefined, feedTitle, summary, model));
-      setSaved(true);
+      addSaved(summary);
       onSummarySaved?.();
     } catch (err) {
       console.error('Failed to save summary:', err);
     } finally {
       setSaving(false);
     }
-  }, [summary, saving, article, feedTitle, model, onSummarySaved]);
+  }, [summary, saving, saved, article, feedTitle, model, onSummarySaved, addSaved]);
 
   return { ...generation, copied, saving, saved, copy, save };
 }

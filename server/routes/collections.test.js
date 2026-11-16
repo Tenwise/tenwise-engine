@@ -86,6 +86,7 @@ test('a collection exports as one Markdown download', async () => {
   const res = await api.get(`/${notes.id}/export.md`);
   assert.equal(res.status, 200);
   assert.match(res.headers.get('content-type'), /^text\/markdown/);
+  assert.match(res.headers.get('x-tenwise-link-only'), /^\d+$/);
   assert.equal(res.headers.get('content-disposition'), 'attachment; filename="notes-q3-chips.md"');
   assert.match(res.text, /^# Notes: Q3 \/ chips!/);
   assert.match(res.text, /For NotebookLM/);

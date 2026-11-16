@@ -25,10 +25,11 @@ const stopCheck = (stop) => (typeof stop === 'function' ? stop : () => Boolean(s
 const signalOf = (stop) => (typeof stop === 'function' ? undefined : stop);
 
 // Yields the model's tokens until done or stopped; a stop is not an error.
-async function* tokensUntilStopped(model, messages, stop) {
+// `options` is streamChat's (src/utils/api.js): { purpose }.
+async function* tokensUntilStopped(model, messages, stop, options) {
   const stopped = stopCheck(stop);
   try {
-    for await (const token of streamChat(model, messages, signalOf(stop))) {
+    for await (const token of streamChat(model, messages, signalOf(stop), options)) {
       if (stopped()) return;
       yield token;
     }
@@ -42,9 +43,14 @@ export async function streamTokens(model, messages, onToken, stop) {
   for await (const token of tokensUntilStopped(model, messages, stop)) onToken(token);
 }
 
+/** streamTokens for a summary: an engine may answer it with a smaller model. */
+export async function streamSummaryTokens(model, messages, onToken, stop) {
+  for await (const token of tokensUntilStopped(model, messages, stop, { purpose: 'summary' })) onToken(token);
+}
+
 /** Runs a task and returns the full response, or what arrived before a stop. */
-export async function collectResponse(model, messages, stop) {
+export async function collectResponse(model, messages, stop, options) {
   let response = '';
-  for await (const token of tokensUntilStopped(model, messages, stop)) response += token;
+  for await (const token of tokensUntilStopped(model, messages, stop, options)) response += token;
   return response;
 }

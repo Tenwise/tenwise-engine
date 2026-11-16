@@ -7,6 +7,7 @@ import { usePolling } from '../hooks/usePolling.js';
 import { refreshNews, refreshSummary } from '../utils/feedSync.js';
 import { serverStatus } from './serverStatus.js';
 import { useToast } from './ToastContext.jsx';
+import { on } from '../lib/appEvents.js';
 
 const LibraryContext = createContext(null);
 
@@ -38,33 +39,57 @@ function useRefreshKeys() {
 }
 
 const REFRESH_WATCH_MS = 60 * 1000;
+// Faster while a run is going, and for the first half minute after the app
+// opens: a workspace that was asleep catches up then (OPS-15), and the
+// person should see it happen.
+const REFRESH_WATCH_FAST_MS = 5 * 1000;
+const OPENING_MS = 30 * 1000;
 
 // The server refreshes feeds on its own schedule; this checks once a minute
-// and shows what a finished run brought (see refreshNews). Returns catchUp(),
-// which notes the latest run without acting on it: for after a refresh this
-// app asked for and has already shown.
-function useServerRefreshes(reloadFeeds, bumpArticles) {
+// and shows what a finished run brought (see refreshNews). The first run to
+// finish after the app opens is announced with a toast; later ones only
+// reload. Returns { running, catchUp }: running while a server run goes, and
+// catchUp(), which notes the latest run without acting on it: for after a
+// refresh this app asked for and has already shown.
+function useServerRefreshes({ reloadFeeds, bumpArticles, showToast }) {
   const seen = useRef(undefined);
+  const announced = useRef(false);
+  const [running, setRunning] = useState(false);
+  const [opening, setOpening] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setOpening(false), OPENING_MS);
+    return () => clearTimeout(timer);
+  }, []);
   const check = useCallback(async () => {
     const status = await api.fetchRefreshStatus().catch(() => null);
     if (!status) return;
+    setRunning(Boolean(status.running));
     const news = refreshNews(seen.current, status);
     seen.current = status.lastFinishedAt;
     if (news.reloadFeeds) reloadFeeds();
     if (news.reloadArticles) bumpArticles();
-  }, [reloadFeeds, bumpArticles]);
-  usePolling(check, REFRESH_WATCH_MS);
-  return useCallback(async () => {
+    if (news.reloadFeeds && !announced.current) {
+      announced.current = true;
+      if (status.lastInserted > 0) showToast(refreshSummary({ inserted: status.lastInserted, failed: [] }).message);
+    }
+  }, [reloadFeeds, bumpArticles, showToast]);
+  // A run under way, or the catch-up after opening, is watched even from a hidden tab.
+  usePolling(check, running || opening ? REFRESH_WATCH_FAST_MS : REFRESH_WATCH_MS, { busy: running || opening });
+  // New feeds' first fetch runs on the server (OPS-19): check now, then fast until it's done.
+  useEffect(() => on('refresh-started', () => { check(); }), [check]);
+  const catchUp = useCallback(async () => {
     const status = await api.fetchRefreshStatus().catch(() => null);
     if (status) seen.current = status.lastFinishedAt;
   }, []);
+  return { running, catchUp };
 }
 
 // Refresh all (the toolbar button and ⌘K), with a toast, plus the scheduled
-// runs the server does on its own.
+// runs the server does on its own: either shows as refreshing.
 function useRefreshing({ refreshAllFeeds, reloadFeeds, bumpArticles, showToast }) {
   const [refreshing, setRefreshing] = useState(false);
-  const catchUpRefreshes = useServerRefreshes(reloadFeeds, bumpArticles);
+  const server = useServerRefreshes({ reloadFeeds, bumpArticles, showToast });
+  const catchUpRefreshes = server.catchUp;
   const refreshAll = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -78,7 +103,7 @@ function useRefreshing({ refreshAllFeeds, reloadFeeds, bumpArticles, showToast }
       setRefreshing(false);
     }
   }, [refreshAllFeeds, catchUpRefreshes, showToast]);
-  return { refreshing, refreshAll };
+  return { refreshing: refreshing || server.running, refreshAll };
 }
 
 // Folder deletes and Clear All Data. The server moves or deletes feeds as a

@@ -24,7 +24,7 @@ test('view mode commands pass the mode id', () => {
   const modes = [];
   const groups = buildCommands({ go: noop, actions, setViewMode: (m) => modes.push(m) });
   groups.find((g) => g.heading === 'List view').items.forEach((i) => i.run());
-  assert.deepEqual(modes, ['rows', 'magazine', 'excerpt', 'compact']);
+  assert.deepEqual(modes, ['rows', 'compact', 'magazine']);
 });
 
 test('palette filter matches word starts in any order, not subsequences', () => {

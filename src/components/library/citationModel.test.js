@@ -10,6 +10,7 @@ test('an article and its feed give the citation its source', () => {
   assert.deepEqual(articleCitationSource(row, feed), {
     author: '', publishedAt: '2026-10-20T15:19:19.000Z', title: 'Why do we have so many meetings?',
     link: 'https://www.nber.org/papers/w35706', siteName: 'Hacker News', siteUrl: 'https://news.ycombinator.com/',
+    sourceTitle: undefined, resolvedLink: undefined,
   });
   assert.equal(
     citationText(articleCitation(row, feed)),

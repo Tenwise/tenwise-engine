@@ -44,3 +44,9 @@ test('generateOPML writes folders by id, skips empty ones, then uncategorized fe
     '</opml>',
   ].join('\n'));
 });
+
+test('generateOPML leaves out Tenwise\'s own Saved pages feed', () => {
+  const xml = generateOPML([{ id: 1, title: 'Saved pages', url: 'tenwise:saved-pages' }, { id: 2, title: 'Blog', url: 'https://b.example/feed' }], []);
+  assert.doesNotMatch(xml, /Saved pages|tenwise:/);
+  assert.match(xml, /b\.example\/feed/);
+});

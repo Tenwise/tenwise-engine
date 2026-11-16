@@ -16,6 +16,7 @@ export function usePaletteCommands({ goToView, setModal, layout, readerOpen }) {
       setViewMode: (mode) => emit('view-mode', mode),
       actions: {
         addFeed: () => setModal('addFeed'),
+        savePage: () => emit('open-save-page', {}),
         openSettings: () => emit('open-settings'),
         refreshAll: library.onRefreshAll,
         toggleTheme: onToggleTheme,

@@ -110,12 +110,31 @@ function preprintParts({ title, id }) {
   };
 }
 
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * The source as published (BRF-23). An item that names its publication (RSS
+ * <source>, as Google News's items do) is cited as that publication, without
+ * the " - Publisher" its title ends with, and the aggregator's site isn't
+ * looked at. A link a plugin resolved to the publisher's page is the URL.
+ */
+export function asPublished(source) {
+  const link = source.resolvedLink || source.link;
+  const publication = oneLine(source.sourceTitle);
+  if (!publication) return { ...source, link };
+  const ending = new RegExp(`\\s+[-–—|]\\s+${escapeRegExp(publication)}\\s*$`, 'i');
+  return { ...source, link, title: oneLine(source.title).replace(ending, ''), siteName: publication, siteUrl: null };
+}
+
 /**
  * An article's APA 7 reference as runs ({ text, italic }). source: { author,
  * publishedAt, title, link, siteName (the feed's title), siteUrl (the feed's
- * site, to spot aggregators) }; any of them may be missing.
+ * site, to spot aggregators), sourceTitle (the publication the item names),
+ * resolvedLink (the publisher's URL for an aggregator's link) }; any of them
+ * may be missing.
  */
-export function apaCitation(source) {
+export function apaCitation(given) {
+  const source = asPublished(given);
   const id = arxivId(source.link);
   const site = id ? 'arXiv' : siteName(source);
   const authors = apaAuthors(source.author, site);

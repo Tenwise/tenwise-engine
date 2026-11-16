@@ -93,11 +93,17 @@ test('a plugin can rewrite the link to extract, or say why it cannot be read', a
   const fetchPage = async (url) => { requested.push(url); return { url, text: page() }; };
   const article = await extractArticle('https://agg.example/item/1', fetchPage);
   assert.equal(article.url, 'https://pub.example.com/a-post');
+  assert.equal(article.resolvedUrl, 'https://pub.example.com/a-post', 'kept for citations (BRF-23)');
   assert.deepEqual(requested, ['https://pub.example.com/a-post']);
   assert.deepEqual(await failureOf(extractArticle('https://agg.example/refuse', fetchPage)), {
     reason: 'aggregator', site: 'agg.example', message: 'Article extraction failed: No link to follow',
   });
-  await extractArticle('https://e.com/plain', fetchPage);
+  assert.equal((await extractArticle('https://e.com/plain', fetchPage)).resolvedUrl, null);
+  // The publisher refuses the page (PitchBook answers 403): where it is was still found (BRF-23).
+  const refused = async (url) => { requested.push(url); throw Object.assign(new Error('Status code 403'), { status: 403 }); };
+  const error = await extractArticle('https://agg.example/item/2', refused).catch((e) => e);
+  assert.deepEqual([error.reason, error.site, error.resolvedUrl], ['blocked', 'pub.example.com', 'https://pub.example.com/a-post']);
+  assert.equal((await extractArticle('https://e.com/plain', refused).catch((e) => e)).resolvedUrl, null);
   assert.equal(requested.at(-1), 'https://e.com/plain');
 });
 
