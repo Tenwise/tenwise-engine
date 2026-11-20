@@ -18,6 +18,7 @@ import CollectionOutBar from './library/CollectionOutBar.jsx';
 import { ToFileBar } from './library/ToFileBar.jsx';
 import { useCollections } from './library/useCollections.js';
 import { useConfirmAction } from '../hooks/useConfirmAction.js';
+import { pluginsOf } from '../plugins/index.js';
 import { useListKeyboard } from './article-list/useListKeyboard.js';
 import { useSelection } from './article-list/useSelection.js';
 import { VirtualArticleList } from './article-list/VirtualArticleList.jsx';
@@ -127,6 +128,7 @@ function useListActions({ data, activeView, selection, visible, sourceOf, onCoun
     bookmark: async () => { await update([...selection.ids], { isBookmarked: 1 }); selection.clear(); },
     collect: () => emit('open-collections', [...selection.ids]),
     exportCSV: () => { downloadCSV(articlesToCSV(selected(), sourceOf), 'tenwise-articles.csv'); selection.clear(); },
+    runPlugin: (id) => { pluginsOf('selectionActions').find((a) => a.id === id)?.run([...selection.ids]); selection.clear(); },
     openAIPanel: (operation) => onOpenAIPanel?.(selected().map((a) => ({ ...a, feedTitle: sourceOf(a) || 'Unknown' })), operation),
     markAllRead,
   }), [selection, visible, update, selected, sourceOf, onOpenAIPanel, markAllRead]);

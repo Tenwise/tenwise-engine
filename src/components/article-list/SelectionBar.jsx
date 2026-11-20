@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
-  HiOutlineArrowDownTray, HiOutlineBookmark, HiOutlineCheckCircle, HiOutlineChevronUp, HiOutlineRectangleStack, HiOutlineSparkles, HiOutlineXMark,
+  HiOutlineArrowDownTray, HiOutlineBookmark, HiOutlineCheckCircle, HiOutlineChevronUp, HiOutlineNewspaper, HiOutlineRectangleStack, HiOutlineSparkles, HiOutlineXMark,
 } from 'react-icons/hi2';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,10 @@ import { pluginsOf } from '../../plugins/index.js';
 
 // What plugins do with several articles at once (src/plugins/index.js), e.g. Compare.
 const AI_OPERATIONS = pluginsOf('selectionOperations');
+// Plugins' own buttons for the selection, e.g. Studio's Start a brief.
+const SELECTION_ACTIONS = pluginsOf('selectionActions');
+// The ones that are also a button of their own, e.g. Newsletter (BRF-32).
+const AI_BUTTONS = AI_OPERATIONS.filter((op) => op.button);
 const FEWEST = Math.min(...AI_OPERATIONS.map((op) => op.min));
 
 function OperationOption({ op, count, onPick }) {
@@ -55,9 +59,20 @@ function AIActionsMenu({ count, onOpenAIPanel }) {
   );
 }
 
+// An AI operation as its own button; outside its range, it says how many it needs.
+function OperationButton({ op, count, onOpenAIPanel }) {
+  const disabled = count < op.min || count > op.max;
+  return (
+    <Button size="sm" variant="outline" disabled={disabled} onClick={() => onOpenAIPanel(op.id)} title={disabled ? `Select ${op.hint} articles` : undefined}>
+      <HiOutlineNewspaper /> {op.label}
+      {disabled && <span className="font-mono text-[10.5px] text-[var(--text-tertiary)]">{op.hint}</span>}
+    </Button>
+  );
+}
+
 const ACTION = 'inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md border-0 bg-transparent px-2 text-xs text-muted-foreground hover:bg-[var(--bg-hover)] hover:text-foreground [&_svg]:size-3.5';
 
-/** Floating bar for the multi-selection: read, save, collect, CSV, and plugins' AI actions. */
+/** Floating bar for the multi-selection: read, save, collect, CSV, plugins' actions and their AI actions. */
 export function SelectionBar({ count, visibleCount, actions }) {
   if (count === 0) return null;
   return (
@@ -70,7 +85,15 @@ export function SelectionBar({ count, visibleCount, actions }) {
       <button type="button" className={ACTION} onClick={actions.bookmark}><HiOutlineBookmark /> Save</button>
       <button type="button" className={ACTION} onClick={actions.collect} title="Add to a collection (saves them)"><HiOutlineRectangleStack /> Collect</button>
       <button type="button" className={ACTION} onClick={actions.exportCSV}><HiOutlineArrowDownTray /> CSV</button>
-      {AI_OPERATIONS.length > 0 && <span className="ml-auto"><AIActionsMenu count={count} onOpenAIPanel={actions.openAIPanel} /></span>}
+      {SELECTION_ACTIONS.map(({ id, label, title, Icon }) => (
+        <button key={id} type="button" className={ACTION} onClick={() => actions.runPlugin(id)} title={title}><Icon /> {label}</button>
+      ))}
+      {AI_OPERATIONS.length > 0 && (
+        <span className="ml-auto flex items-center gap-1">
+          {AI_BUTTONS.map((op) => <OperationButton key={op.id} op={op} count={count} onOpenAIPanel={actions.openAIPanel} />)}
+          <AIActionsMenu count={count} onOpenAIPanel={actions.openAIPanel} />
+        </span>
+      )}
     </div>
   );
 }

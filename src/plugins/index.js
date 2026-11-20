@@ -41,9 +41,13 @@
 //                 Wraps the workspace, for state that lives while the app does.
 //   railActions   { id, Control() }
 //                 A control at the foot of the app rail, below Settings.
-//   selectionOperations { id, label, min, max, hint, Panel({ articles, initialOperation, onClose, width, onResize }) }
+//   selectionOperations { id, label, min, max, hint, button?, Panel({ articles, initialOperation, onClose, width, onResize }) }
 //                 An entry in the selection bar's AI menu, for min–max
-//                 selected articles; its Panel replaces the reader.
+//                 selected articles; its Panel replaces the reader. With
+//                 button, it is also a button of its own beside AI.
+//   selectionActions { id, label, title?, Icon, run(articleIds) }
+//                 A button in the selection bar, after CSV: run gets the
+//                 selected articles' ids, then the selection clears.
 //   aiEngines     { id, models(), handles(name), streamChat(name, messages, signal, options) }
 //                 An AI engine beside Gemini Nano and Ollama. models()
 //                 resolves to the models it offers now ([{ name, label?,
